@@ -1,10 +1,10 @@
-# 🐾 Sprint 2 — Profiles, Matching & Chat
+#  Sprint 2 — Profiles, Matching & Chat
 
 This sprint builds on the backend foundation by adding user profiles, a basic matching flow, and initial chat functionality.
 
 ---
 
-## 👤 User Profiles
+##  User Profiles
 
 - [ ] **Extend database schema with profile fields**  
   - Add fields: `bio`, `location`, `dog_breed` (for owners), `services_offered` (for sitters/kennels)  
@@ -21,7 +21,7 @@ This sprint builds on the backend foundation by adding user profiles, a basic ma
 
 ---
 
-## 🔗 Matching System (MVP)
+##  Matching System (MVP)
 
 - [ ] **Database: Add matches table**  
   - Fields: `owner_id`, `sitter_id`, `status` (pending, accepted, rejected)  
@@ -39,7 +39,7 @@ This sprint builds on the backend foundation by adding user profiles, a basic ma
 
 ---
 
-## 💬 Chat (Basic Version)
+##  Chat (Basic Version)
 
 - [ ] **Database: Messages table**  
   - Fields: `match_id`, `sender_id`, `message`, `timestamp`  
@@ -57,7 +57,7 @@ This sprint builds on the backend foundation by adding user profiles, a basic ma
 
 ---
 
-## 🧪 Testing
+##  Testing
 
 - [ ] **Unit tests for profile endpoints**  
   - Create + update success/failure cases  

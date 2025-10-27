@@ -1,30 +1,30 @@
-# 🏁 Sprint 1 — Core Setup
+#  Sprint 1 — Core Setup
 
 This sprint focuses on establishing the foundation: database, backend, containerization, CI/CD, and initial testing.
 
 ---
 
-## 📂 Database & Schema
+##  Database & Schema
 
-- [ ] **Design initial MySQL schema**  
+- [X] **Design initial MySQL schema**  
   - Create ERD for tables: `users`, `profiles`, `roles`  
   - Write SQL migration script for schema creation  
   - **Done when:** Migration runs successfully, schema matches ERD  
 
-- [ ] **Add Prisma schema + migration**  
+- [X] **Add Prisma schema + migration**  
   - Translate DB schema into `schema.prisma`  
   - Run `npx prisma migrate dev`  
   - **Done when:** Prisma generates correct tables in DB  
 
-- [ ] **Write seed script for test data**  
+- [X] **Write seed script for test data**  
   - Add 2 owners, 2 sitters, 1 kennel with dummy data  
   - **Done when:** `npm run seed` populates DB  
 
 ---
 
-## ⚙️ Backend Setup
+##  Backend Setup
 
-- [ ] **Initialize Node.js backend with Express**  
+- [X] **Initialize Node.js backend with Express**  
   - Create boilerplate app  
   - Add `/health` route returning `"OK"`  
   - **Done when:** `npm run dev` starts server successfully  
@@ -48,7 +48,7 @@ This sprint focuses on establishing the foundation: database, backend, container
 
 ---
 
-## 🔄 CI/CD
+##  CI/CD
 
 - [ ] **Setup GitHub Actions pipeline**  
   - Add lint + test + build steps  
@@ -61,7 +61,7 @@ This sprint focuses on establishing the foundation: database, backend, container
 
 ---
 
-## 🧪 Testing
+##  Testing
 
 - [ ] **Unit tests for authentication**  
   - Test register + login success and failure  
