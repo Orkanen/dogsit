@@ -4,6 +4,9 @@ const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
 
 const authRoutes = require('./routes/auth');
+const ownerRoutes = require('./routes/owner');
+const profileRoutes = require('./routes/profile');
+const kennelRoutes = require('./routes/kennel');
 const prisma = new PrismaClient();
 const app = express();
 const port = process.env.PORT || 3000;
@@ -22,6 +25,9 @@ app.get('/api/users', async (req, res) => {
 });
 
 app.use('/auth', authRoutes);
+app.use("/kennel", kennelRoutes);
+app.use('/owner', ownerRoutes);
+app.use('/profile', profileRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

@@ -29,7 +29,7 @@ This sprint focuses on establishing the foundation: database, backend, container
   - Add `/health` route returning `"OK"`  
   - **Done when:** `npm run dev` starts server successfully  
 
-- [ ] **Implement authentication (JWT)**  
+- [X] **Implement authentication (JWT)**  
   - `POST /auth/register`  
   - `POST /auth/login`  
   - Hash passwords with bcrypt  
