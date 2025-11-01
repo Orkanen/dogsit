@@ -1,51 +1,76 @@
-import { PrismaClient } from '@prisma/client'
-const prisma = new PrismaClient()
+const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcrypt');
+
+const prisma = new PrismaClient();
+const SALT_ROUNDS = 10;
+
+async function hashPassword(password) {
+  return await bcrypt.hash(password, SALT_ROUNDS);
+}
+
+async function upsertRole(name) {
+  await prisma.role.upsert({
+    where: { name },
+    update: {},
+    create: { name },
+  });
+}
+
+async function upsertUser(email, plainPassword, roleName, profileData) {
+  const hashed = await hashPassword(plainPassword);
+
+  await prisma.user.upsert({
+    where: { email },
+    update: {
+      // Always set the password to a bcrypt hash on updates as well
+      password: hashed,
+      role: { connect: { name: roleName } },
+      // Optionally update profile fields if profile exists
+      profile: {
+        upsert: {
+          update: profileData,
+          create: profileData,
+        },
+      },
+    },
+    create: {
+      email,
+      password: hashed,
+      role: { connect: { name: roleName } },
+      profile: { create: profileData },
+    },
+  });
+}
 
 async function main() {
-  const roles = await prisma.role.createMany({
-    data: [
-      { name: 'owner' },
-      { name: 'sitter' },
-      { name: 'kennel' },
-    ],
-    skipDuplicates: true,
-  })
+  // roles
+  await upsertRole('owner');
+  await upsertRole('sitter');
+  await upsertRole('kennel');
 
-  const owner1 = await prisma.user.create({
-    data: {
-      email: 'owner1@example.com',
-      password: 'test123',
-      role: { connect: { name: 'owner' } },
-      profile: {
-        create: {
-          firstName: 'Anna',
-          lastName: 'Larsson',
-          bio: 'Loves dogs!',
-          location: 'Stockholm'
-        }
-      }
-    }
-  })
+  // users (examples)
+  await upsertUser('owner1@example.com', 'test123', 'owner', {
+    firstName: 'Anna',
+    lastName: 'Larsson',
+    bio: 'Loves dogs!',
+    location: 'Stockholm',
+  });
 
-  const sitter1 = await prisma.user.create({
-    data: {
-      email: 'sitter1@example.com',
-      password: 'test123',
-      role: { connect: { name: 'sitter' } },
-      profile: {
-        create: {
-          firstName: 'Erik',
-          lastName: 'Svensson',
-          bio: 'Professional dog sitter.',
-          location: 'Gothenburg'
-        }
-      }
-    }
-  })
+  await upsertUser('sitter1@example.com', 'test123', 'sitter', {
+    firstName: 'Erik',
+    lastName: 'Svensson',
+    bio: 'Professional dog sitter.',
+    location: 'Gothenburg',
+  });
 
-  console.log('Seed complete')
+  console.log('Seed complete (upsert)');
 }
 
 main()
-  .catch((e) => console.error(e))
-  .finally(async () => await prisma.$disconnect())
+  .catch((e) => {
+    console.error(e);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

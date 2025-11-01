@@ -36,7 +36,7 @@ This sprint focuses on establishing the foundation: database, backend, container
   - Return JWT on login  
   - **Done when:** Valid login returns working JWT  
 
-- [ ] **Role management middleware**  
+- [X] **Role management middleware**  
   - Middleware to check `role` (owner, sitter, kennel)  
   - Example: `/kennel/dashboard` restricted to kennels  
   - **Done when:** Wrong role returns `403`  

@@ -1,6 +1,9 @@
 # Sensitive files
 private_notes.txt
 .env
+.env.docker
+.env.compose
+docker-compose.yml
 secrets/
 
 # React Native specific
