@@ -1,0 +1,63 @@
+name: Node.js CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dogsit-backend
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: dogsit-backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint --if-present
+
+      - name: Run tests with coverage
+        run: npm test -- --coverage
+
+      - name: Generate coverage badge
+        run: npm run badge --if-present
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: dogsit-backend/coverage
+
+      - name: Move coverage badge to root
+        run: |
+          if [ -f dogsit-backend/coverage/badge.svg ]; then
+            mv dogsit-backend/coverage/badge.svg coverage-badge.svg
+          else
+            echo "No coverage badge found to move."
+          fi
+
+      - name: Commit badge to main README
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add coverage-badge.svg || true
+          git diff --cached --quiet && echo "No badge changes to commit." || git commit -m "Update coverage badge"
+          git push

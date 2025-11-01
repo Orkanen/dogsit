@@ -41,7 +41,7 @@ This sprint focuses on establishing the foundation: database, backend, container
   - Example: `/kennel/dashboard` restricted to kennels  
   - **Done when:** Wrong role returns `403`  
 
-- [ ] **Dockerize backend**  
+- [X] **Dockerize backend**  
   - Add `Dockerfile` + `.dockerignore`  
   - Build and run backend via Docker  
   - **Done when:** `docker run` starts app successfully  
@@ -50,11 +50,11 @@ This sprint focuses on establishing the foundation: database, backend, container
 
 ##  CI/CD
 
-- [ ] **Setup GitHub Actions pipeline**  
+- [X] **Setup GitHub Actions pipeline**  
   - Add lint + test + build steps  
   - **Done when:** Workflow passes on every push  
 
-- [ ] **Add coverage badge to README**  
+- [X] **Add coverage badge to README**  
   - Configure Jest + NYC  
   - Update README with badge  
   - **Done when:** Badge shows coverage percentage  

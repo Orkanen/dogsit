@@ -1,0 +1,7 @@
+{
+    "all": true,
+    "reporter": ["lcov", "text", "json-summary"],
+    "include": ["routes/**/*.js", "middleware/**/*.js", "index.js"],
+    "exclude": ["node_modules", "prisma", "coverage", "tests"]
+}
+  

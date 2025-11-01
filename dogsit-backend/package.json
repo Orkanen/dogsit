@@ -13,15 +13,25 @@
     "@types/jsonwebtoken": "^9.0.10",
     "jest": "^30.2.0",
     "nodemon": "^3.1.10",
+    "nyc": "^17.1.0",
     "supertest": "^7.1.4"
   },
   "name": "dogsit-backend",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest --config ./config/jest.config.js --runInBand",
+    "coverage": "nyc --nycrc-path ./config/nyc.config.json npm test",
+    "badge": "npx coverage-badges-cli -o coverage/badge.svg",
     "dev": "nodemon index.js",
     "seed": "node prisma/seed.js"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  },
+  "nyc": {
+    "reporter": ["text", "lcov"],
+    "exclude": ["node_modules", "prisma"]
   },
   "keywords": [],
   "author": "",
