@@ -1,1 +1,1 @@
-![Backend Test Coverage](./dogsit-backend/config/coverage/badge.svg)
+![Backend Test Coverage](coverage-badge.svg)
