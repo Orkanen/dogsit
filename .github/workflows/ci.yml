@@ -1,3 +1,4 @@
+# .github/workflows/ci.yml
 name: Node.js CI
 
 on:
@@ -6,6 +7,9 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,25 +17,58 @@ jobs:
       run:
         working-directory: dogsit-backend
 
+    strategy:
+      matrix:
+        node-version: [20.x]
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
           cache-dependency-path: dogsit-backend/package-lock.json
 
-      - name: Install
+      - name: Install dependencies
         run: npm ci
 
       - name: Lint
         run: npm run lint --if-present
 
-      - name: Test with coverage
+      # SINGLE RUN: Test + Coverage
+      - name: Run tests with coverage
         run: npm run test:coverage
 
-      - name: Generate badge
+      # SINGLE RUN: Generate badge
+      - name: Generate coverage badge
         run: npm run badge
+
+      # MOVE badge to project root for README
+      - name: Move coverage badge to root
+        run: |
+          if [ -f config/coverage/badge.svg ]; then
+            cp config/coverage/badge.svg ../coverage-badge.svg
+            echo "Badge moved to root"
+          else
+            echo "Badge not found at config/coverage/badge.svg"
+            exit 1
+          fi
+
+      # COMMIT & PUSH badge
+      - name: Commit and push coverage badge
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd ..
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add coverage-badge.svg
+          if git diff --cached --quiet; then
+            echo "No badge changes to commit"
+          else
+            git commit -m "chore: update coverage badge [ci skip]"
+            git push origin main
+          fi
