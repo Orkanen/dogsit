@@ -3,6 +3,7 @@ export default {
     collectCoverage: true,
     coverageDirectory: 'coverage',
     coverageReporters: ['text', 'lcov', 'json-summary'],
-    setupFilesAfterEnv: ['./jest.setup.js']
+    setupFilesAfterEnv: ['./jest.setup.js'],
+    passWithNoTests: true
 };
   

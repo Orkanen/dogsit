@@ -1,0 +1,21 @@
+@environment = dev
+@baseUrl = http://localhost:3000
+@user_email = owner1@example.com
+@user_password = test123
+
+### LOGIN
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{ user_email}}",
+  "password": "{{ user_password }}"
+}
+
+### Get me
+@token = {{login.response.body.token}}
+
+### Get Profile details
+get {{baseUrl}}/profile/1
+Authorization: Bearer {{token}}
