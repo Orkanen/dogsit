@@ -1,3 +1,4 @@
+# .github/workflows/ci.yml
 name: Node.js CI
 
 on:
@@ -5,6 +6,9 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -34,30 +38,37 @@ jobs:
       - name: Lint
         run: npm run lint --if-present
 
+      # SINGLE RUN: Test + Coverage
       - name: Run tests with coverage
-        run: npm test -- --coverage
+        run: npm run test:coverage
 
+      # SINGLE RUN: Generate badge
       - name: Generate coverage badge
-        run: npm run badge --if-present
+        run: npm run badge
 
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: dogsit-backend/coverage
-
+      # MOVE badge to project root for README
       - name: Move coverage badge to root
         run: |
-          if [ -f dogsit-backend/coverage/badge.svg ]; then
-            mv dogsit-backend/coverage/badge.svg coverage-badge.svg
+          if [ -f config/coverage/badge.svg ]; then
+            cp config/coverage/badge.svg ../coverage-badge.svg
+            echo "Badge moved to root"
           else
-            echo "No coverage badge found to move."
+            echo "Badge not found at config/coverage/badge.svg"
+            exit 1
           fi
 
-      - name: Commit badge to main README
+      # COMMIT & PUSH badge
+      - name: Commit and push coverage badge
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          cd ..
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add coverage-badge.svg || true
-          git diff --cached --quiet && echo "No badge changes to commit." || git commit -m "Update coverage badge"
-          git push
+          git add coverage-badge.svg
+          if git diff --cached --quiet; then
+            echo "No badge changes to commit"
+          else
+            git commit -m "chore: update coverage badge [ci skip]"
+            git push origin main
+          fi
