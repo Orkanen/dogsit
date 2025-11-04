@@ -6,11 +6,49 @@ private_notes.txt
 docker-compose.yml
 secrets/
 
-# React Native specific
+# Node.js
 node_modules/
-.expo/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 dist/
-npm-debug.*
+build/
+
+# Prisma
+prisma/dev.db
+prisma/*.db
+prisma/migrations/*/migration_lock.toml
+!prisma/migrations/*/*.sql
+.prisma/client/
+
+# Docker
+docker-compose.override.yml
+Dockerfile.local
+.dockerignore
+
+# Logs
+logs/
+*.log
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing / Coverage
+coverage/
+coverage-badge.svg
+config/coverage/
+test-results/
+playwright-report/
+playwright/.cache/
+
+# React Native (keep if you plan mobile later)
+.expo/
 *.jks
 *.p12
 *.key
@@ -18,19 +56,5 @@ npm-debug.*
 *.orig.*
 web-build/
 web-report/
-
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-config/coverage/
-
-# OS-specific
-.DS_Store
-Thumbs.db
-
-.vscode/
 
 # Might re-stage later:

@@ -6,11 +6,11 @@ This sprint builds on the backend foundation by adding user profiles, a basic ma
 
 ##  User Profiles
 
-- [ ] **Extend database schema with profile fields**  
+- [X] **Extend database schema with profile fields**  
   - Add fields: `bio`, `location`, `dog_breed` (for owners), `services_offered` (for sitters/kennels)  
   - **Done when:** Migration adds fields without breaking existing schema  
 
-- [ ] **API: Create & update profile endpoint**  
+- [X] **API: Create & update profile endpoint**  
   - `POST /profile` and `PUT /profile`  
   - Validate input  
   - **Done when:** Authenticated users can create/update their profile  
@@ -23,11 +23,11 @@ This sprint builds on the backend foundation by adding user profiles, a basic ma
 
 ##  Matching System (MVP)
 
-- [ ] **Database: Add matches table**  
+- [X] **Database: Add matches table**  
   - Fields: `owner_id`, `sitter_id`, `status` (pending, accepted, rejected)  
   - **Done when:** Migration creates table  
 
-- [ ] **API: Matching endpoints**  
+- [X] **API: Matching endpoints**  
   - `POST /match` (owner requests sitter/kennel)  
   - `PUT /match/:id` (accept/reject)  
   - **Done when:** Matching logic works and updates DB  
