@@ -21,4 +21,3 @@ RUN chmod +x /usr/src/app/entrypoint.sh
 EXPOSE 3000
 
 ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
-CMD ["node", "index.js"]

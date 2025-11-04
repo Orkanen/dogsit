@@ -7,6 +7,7 @@ const authRoutes = require('./routes/auth');
 const ownerRoutes = require('./routes/owner');
 const profileRoutes = require('./routes/profile');
 const kennelRoutes = require('./routes/kennel');
+const matchRoutes = require('./routes/match');
 const prisma = new PrismaClient();
 const app = express();
 const port = process.env.PORT || 3000;
@@ -28,6 +29,7 @@ app.use('/auth', authRoutes);
 app.use("/kennel", kennelRoutes);
 app.use('/owner', ownerRoutes);
 app.use('/profile', profileRoutes);
+app.use('/match', matchRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

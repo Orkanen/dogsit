@@ -13,9 +13,33 @@ Content-Type: application/json
   "password": "{{ user_password }}"
 }
 
+### REGISTER
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "owner2@example.com",
+  "password": "test123",
+  "roleName": "owner"
+}
+
 ### Get me
 @token = {{login.response.body.token}}
 
 ### Get Profile details
-get {{baseUrl}}/profile/1
+GET {{baseUrl}}/profile
 Authorization: Bearer {{token}}
+
+### UPDATE Profile
+POST {{baseUrl}}/profile
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "firstName": "Lisa",
+  "lastName": "Larsson",
+  "bio": "Looking for work!",
+  "location": "Stockholm",
+  "dogBreed": "Golden Retriever",
+  "servicesOffered": "Weekend sitting, basic training, grooming"
+}

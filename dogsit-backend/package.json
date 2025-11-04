@@ -23,8 +23,12 @@
     "test": "jest --config ./config/jest.config.js --runInBand",
     "test:coverage": "jest --config ./config/jest.config.js --runInBand --coverage",
     "badge": "node scripts/generate-badge.js",
-    "seed": "node prisma/seed.js"
+    "seed": "node prisma/seed.js",
+    "dev": "nodemon index.js"
   },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },  
   "jest": {
     "testEnvironment": "node"
   },
