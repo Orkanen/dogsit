@@ -41,13 +41,13 @@ This sprint builds on the backend foundation by adding user profiles, a basic ma
 
 ##  Chat (Basic Version)
 
-- [ ] **Database: Messages table**  
+- [X] **Database: Messages table**  
   - Fields: `match_id`, `sender_id`, `message`, `timestamp`  
   - **Done when:** Migration creates table  
 
-- [ ] **API: Chat endpoints**  
-  - `POST /messages` (send message)  
-  - `GET /messages/:matchId` (fetch chat history)  
+- [X] **API: Chat endpoints**  
+  - `POST /message` (send message)  
+  - `GET /message/:matchId` (fetch chat history)  
   - **Done when:** Messages persist to DB and can be retrieved  
 
 - [ ] **Frontend: Chat UI**  

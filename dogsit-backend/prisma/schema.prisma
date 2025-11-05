@@ -22,15 +22,14 @@ model User {
   password  String
   profile   Profile?
 
-  // Many-to-many with Role
   roles     UserRole[]
 
-  // Match relations
   sentMatches     Match[] @relation("MatchOwner")
   receivedMatches Match[] @relation("MatchSitter")
 
-  // Kennel membership (optional)
   kennelMemberships KennelMember[]
+  
+  sentMessages Message[]
 }
 
 model Role {
@@ -76,6 +75,8 @@ model Match {
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 
+  messages Message[]
+
   @@unique([ownerId, sitterId])
 }
 
@@ -98,4 +99,18 @@ model KennelMember {
   user     User   @relation(fields: [userId], references: [id])
 
   @@id([kennelId, userId])
+}
+
+/* ---------- MESSAGE ---------- */
+model Message {
+  id        Int      @id @default(autoincrement())
+  matchId   Int
+  senderId  Int
+  message   String
+  timestamp DateTime @default(now())
+
+  match     Match    @relation(fields: [matchId], references: [id])
+  sender    User     @relation(fields: [senderId], references: [id])
+
+  @@index([matchId, timestamp])
 }

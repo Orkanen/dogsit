@@ -12,7 +12,7 @@ router.get("/", authenticateToken, async (req, res) => {
       where: { id: req.user.id },
       include: {
         profile: true,
-        roles: { include: { role: true } } // ← FIXED
+        roles: { include: { role: true } }
       },
     });
 

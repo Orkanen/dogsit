@@ -74,6 +74,18 @@ CREATE TABLE `KennelMember` (
     PRIMARY KEY (`kennelId`, `userId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `Message` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `matchId` INTEGER NOT NULL,
+    `senderId` INTEGER NOT NULL,
+    `message` VARCHAR(191) NOT NULL,
+    `timestamp` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `Message_matchId_timestamp_idx`(`matchId`, `timestamp`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- AddForeignKey
 ALTER TABLE `UserRole` ADD CONSTRAINT `UserRole_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -94,3 +106,9 @@ ALTER TABLE `KennelMember` ADD CONSTRAINT `KennelMember_kennelId_fkey` FOREIGN K
 
 -- AddForeignKey
 ALTER TABLE `KennelMember` ADD CONSTRAINT `KennelMember_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Message` ADD CONSTRAINT `Message_matchId_fkey` FOREIGN KEY (`matchId`) REFERENCES `Match`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Message` ADD CONSTRAINT `Message_senderId_fkey` FOREIGN KEY (`senderId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

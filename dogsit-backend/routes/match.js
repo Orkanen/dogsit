@@ -15,7 +15,7 @@ router.post("/", authenticateToken, async (req, res) => {
   try {
     const sitter = await prisma.user.findUnique({
       where: { id: parseInt(sitterId) },
-      include: { roles: { include: { role: true } } } // ← FIXED
+      include: { roles: { include: { role: true } } }
     });
 
     if (!sitter) return res.status(404).json({ error: "Sitter not found" });
