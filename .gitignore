@@ -3,6 +3,8 @@ private_notes.txt
 .env
 .env.docker
 .env.compose
+.env.local
+.env.production
 docker-compose.yml
 secrets/
 
@@ -17,6 +19,7 @@ build/
 
 # Prisma
 prisma/dev.db
+prisma/dev.db-journal
 prisma/*.db
 prisma/migrations/*/migration_lock.toml
 !prisma/migrations/*/*.sql
@@ -26,6 +29,9 @@ prisma/migrations/*/migration_lock.toml
 docker-compose.override.yml
 Dockerfile.local
 .dockerignore
+Dockerfile*
+docker-compose.yml
+docker-compose.*.yml
 
 # Logs
 logs/
