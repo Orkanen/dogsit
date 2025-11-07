@@ -7,12 +7,12 @@
 
 ## 1. Fix Profile Update (Frontend + Backend)
 
-* [ ] **Backend**  
+* [X] **Backend**  
   * `POST /profile` → updates `Profile` row  
   * Return full updated `profile` object  
   * Validate required fields  
 
-* [ ] **Frontend**  
+* [X] **Frontend**  
   * `Profile.jsx` → `api.updateProfile()` on submit  
   * Show success toast  
   * Reload profile on save  

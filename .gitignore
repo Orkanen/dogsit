@@ -63,4 +63,21 @@ playwright/.cache/
 web-build/
 web-report/
 
+# === DOGSIT FRONTEND ===
+dogsit-frontend/node_modules/
+dogsit-frontend/.env
+dogsit-frontend/.env.local
+dogsit-frontend/dist/
+dogsit-frontend/build/
+
+# === COVERAGE BADGE (auto-generated) ===
+coverage-badge.svg
+coverage/
+playwright-report/
+
+# === VITE / REACT ===
+dogsit-frontend/.vite/
+dogsit-frontend/.env.*
+!dogsit-frontend/.env.example
+
 # Might re-stage later:
