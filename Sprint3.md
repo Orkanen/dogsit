@@ -23,12 +23,12 @@
 
 ## 2. Matching System
 
-* [ ] **Backend**  
+* [X] **Backend**  
   * `GET /match` → returns `sentMatches` and `receivedMatches`  
   * `POST /match` → owner sends request to sitter  
   * `PATCH /match/:id/accept` & `/reject`  
 
-* [ ] **Frontend**  
+* [X] **Frontend**  
   * `/matches` screen  
   * Tabs: **Sent**, **Received**  
   * Action buttons: **Accept**, **Reject**, **Cancel**  
@@ -39,7 +39,7 @@
 
 ## 3. Chat (Real-Time Messaging)
 
-* [ ] **Backend**  
+* [X] **Backend**  
   * `GET /message/:matchId` → all messages  
   * `POST /message` → `{ matchId, message }`  
   * Include `senderId`, `timestamp`  
@@ -111,6 +111,29 @@
 
 Backend:
 
-Roles
+Update/Change/Add Roles (Multiple Role option) Sitter/Owner/Employee...
+ - An Owner can be a sitter, a Employee can be sitter, owner and so on, more roles might need to be added to backend as project develops. Like Certifiers, or things like that.
 Kennel (improvements)
-Dog profile
+ - Current Dogs[] available
+ - Dogs Bred (Connected table)
+ - Family Trees (Connected Table)
+ - Rewards/Prices (Connected Table?)
+ - Diplomas (Connected Table?)
+ - Certificates (Connected Table?)
+ - Current Main Two Parent Dogs of Current Litter
+ - Litter Dog Identifier Images[] -> From profile
+ - Parent Dog Identifier Images[] -> From Profile
+Pet profile
+  - Rewards/Prices (Connected Table?)
+  - Diplomas (Connected Table?)
+  - Family Tree (Connected Table?)
+  - Kennel (Connected Table)
+  - Identifiers
+  - Male/Female
+  - Color
+  - Breed
+  - Age
+  - Images[]
+Sitters -> Potential to block future requests from ID
+Sitters -> Pet Care History (As proof of work, resumé)
+View Sitters Profiles (Public)

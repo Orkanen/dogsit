@@ -50,7 +50,7 @@ export default function Profile() {
         }
 
         load()
-    }, [id, currentUser?.id])  // ← Only re-run if user ID changes
+    }, [id, currentUser?.id])
 
     const handleChange = (e) => {
         const { name, value } = e.target

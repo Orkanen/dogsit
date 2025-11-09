@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import api from '../lib/api'
 
 const inputStyle = {
@@ -27,11 +27,20 @@ export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
+  const from = location.state?.from?.pathname || '/'
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate(from, { replace: true });
+    }
+  }, [isLoggedIn, navigate, from]);
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -43,10 +52,9 @@ export default function Login() {
       localStorage.setItem('token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
 
-      // Redirect to the user’s own profile
-      navigate(`/profile/${data.user.id}`)
+      navigate(from, { replace: true })
     } catch (err) {
-      setError(err.message || 'Login failed')
+      setError(err.response?.data?.message || err.message || 'Login failed')
     } finally {
       setLoading(false)
     }
@@ -61,6 +69,7 @@ export default function Login() {
         <input
           name="email"
           type="email"
+          autoFocus
           placeholder="Email"
           value={form.email}
           onChange={handleChange}
