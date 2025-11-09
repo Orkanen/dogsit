@@ -47,6 +47,59 @@ const api = {
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
     }).then(handleResponse),
+
+    // MATCHES
+    getMatches: () =>
+    fetch(`${API_BASE}/match`, { headers: getAuthHeaders() }).then(handleResponse),
+
+    createMatch: (sitterId) =>
+        fetch(`${API_BASE}/match`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ sitterId }),
+        }).then(handleResponse),
+
+    // ACCEPT
+    acceptMatch: (matchId) =>
+    fetch(`${API_BASE}/match/${matchId}/accept`, {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+    }).then(handleResponse),
+  
+    // REJECT
+    rejectMatch: (matchId) =>
+        fetch(`${API_BASE}/match/${matchId}/reject`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        }).then(handleResponse),
+
+    // CANCEL
+    cancelMatch: (matchId) =>
+        fetch(`${API_BASE}/match/${matchId}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+        }).then(handleResponse),
+
+    // CREATE REQUEST
+    createMatch: (sitterId) =>
+        fetch(`${API_BASE}/match`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ sitterId }),
+        }).then(handleResponse),
+
+    // SITTERS
+    getSitters: () =>
+    fetch(`${API_BASE}/sitters`, {
+      headers: { "Content-Type": "application/json" }
+    }).then(handleResponse),
+
+    // KENNELS
+    getKennels: () =>
+    fetch(`${API_BASE}/kennels`, {
+        headers: { "Content-Type": "application/json" }
+    }).then(handleResponse)
+
 }
 
 export default api

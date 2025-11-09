@@ -21,6 +21,8 @@ export default function Home() {
           <p><strong>Logged in as:</strong> {user.email} ({user.role})</p>
           <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
             <Link to={`/profile/${user.id}`} style={linkStyle}>Edit Profile</Link>
+            <Link to="/matches" style={linkStyle}>Matches</Link>
+            <Link to="/kennels" style={linkStyle}>Kennels</Link>
             <button onClick={handleLogout} style={{ color: 'red', background: 'none', border: 'none', textDecoration: 'underline', cursor: 'pointer' }}>
               Logout
             </button>

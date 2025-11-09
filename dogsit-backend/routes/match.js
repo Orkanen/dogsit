@@ -5,7 +5,7 @@ const { authenticateToken } = require("../middleware/auth");
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// REQUEST SITTER
+// REQUEST
 router.post("/", authenticateToken, async (req, res) => {
   const ownerId = req.user.id;
   const { sitterId } = req.body;
@@ -31,9 +31,7 @@ router.post("/", authenticateToken, async (req, res) => {
     const existing = await prisma.match.findUnique({
       where: { ownerId_sitterId: { ownerId, sitterId: parseInt(sitterId) } }
     });
-
-    if (existing)
-      return res.status(409).json({ error: "Match request already exists", match: existing });
+    if (existing) return res.status(409).json({ error: "Match request already exists", match: existing });
 
     const match = await prisma.match.create({
       data: { ownerId, sitterId: parseInt(sitterId) },
@@ -46,29 +44,26 @@ router.post("/", authenticateToken, async (req, res) => {
     res.status(201).json(match);
   } catch (err) {
     console.error(err);
-    if (err.code === 'P2002') return res.status(409).json({ error: "Match request already exists" });
+    if (err.code === "P2002") return res.status(409).json({ error: "Match request already exists" });
     res.status(500).json({ error: "Failed to create match request" });
   }
 });
 
 // ACCEPT/REJECT
-router.put("/:id", authenticateToken, async (req, res) => {
-  const sitterId = req.user.id;
+async function updateMatchStatus(req, res, newStatus) {
+  const userId = req.user.id;
   const matchId = parseInt(req.params.id);
-  const { status } = req.body;
-
-  if (!["ACCEPTED", "REJECTED"].includes(status))
-    return res.status(400).json({ error: "Status must be ACCEPTED or REJECTED" });
 
   try {
     const match = await prisma.match.findUnique({ where: { id: matchId } });
     if (!match) return res.status(404).json({ error: "Match not found" });
-    if (match.sitterId !== sitterId) return res.status(403).json({ error: "Unauthorized" });
+
+    if (match.sitterId !== userId) return res.status(403).json({ error: "Unauthorized" });
     if (match.status !== "PENDING") return res.status(400).json({ error: "Already responded" });
 
     const updated = await prisma.match.update({
       where: { id: matchId },
-      data: { status },
+      data: { status: newStatus },
       include: {
         owner: { include: { profile: true } },
         sitter: { include: { profile: true } }
@@ -80,9 +75,31 @@ router.put("/:id", authenticateToken, async (req, res) => {
     console.error(err);
     res.status(500).json({ error: "Failed to update match" });
   }
+}
+
+router.patch("/:id/accept", authenticateToken, (req, res) => updateMatchStatus(req, res, "ACCEPTED"));
+router.patch("/:id/reject", authenticateToken, (req, res) => updateMatchStatus(req, res, "REJECTED"));
+
+// CANCEL
+router.delete("/:id", authenticateToken, async (req, res) => {
+  const ownerId = req.user.id;
+  const matchId = parseInt(req.params.id);
+
+  try {
+    const match = await prisma.match.findUnique({ where: { id: matchId } });
+    if (!match) return res.status(404).json({ error: "Match not found" });
+    if (match.ownerId !== ownerId) return res.status(403).json({ error: "Unauthorized" });
+    if (match.status !== "PENDING") return res.status(400).json({ error: "Cannot cancel – already responded" });
+
+    await prisma.match.delete({ where: { id: matchId } });
+    res.json({ message: "Match request cancelled" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to cancel match" });
+  }
 });
 
-// GET SENT/RECEIVED
+// LIST
 router.get("/", authenticateToken, async (req, res) => {
   const userId = req.user.id;
 
