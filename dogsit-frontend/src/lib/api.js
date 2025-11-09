@@ -93,6 +93,13 @@ const api = {
     fetch(`${API_BASE}/sitters`, {
       headers: { "Content-Type": "application/json" }
     }).then(handleResponse),
+
+    // KENNELS
+    getKennels: () =>
+    fetch(`${API_BASE}/kennels`, {
+        headers: { "Content-Type": "application/json" }
+    }).then(handleResponse)
+
 }
 
 export default api

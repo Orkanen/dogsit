@@ -135,5 +135,6 @@ Pet profile
   - Age
   - Images[]
 Sitters -> Potential to block future requests from ID
+Sitters -> Public Profiles (unless blocked)
 Sitters -> Pet Care History (As proof of work, resumé)
 View Sitters Profiles (Public)

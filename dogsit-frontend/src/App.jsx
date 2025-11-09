@@ -5,6 +5,8 @@ import Register from './components/Register';
 import Profile from './components/Profile';
 import Matches from './components/Matches';
 import Sitters from './components/Sitters';
+import Kennels from './components/Kennels';
+import KennelDetail from './pages/KennelDetail';
 
 // Token Helper
 const getToken = () => localStorage.getItem('token');
@@ -47,6 +49,8 @@ export default function App() {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/kennels" element={<Kennels />} />
+      <Route path="/kennel/:id" element={<KennelDetail />} />
 
       {/* PROTECTED */}
       <Route

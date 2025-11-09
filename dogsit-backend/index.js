@@ -28,7 +28,7 @@ app.get('/api/users', async (req, res) => {
 });
 
 app.use('/auth', authRoutes);
-app.use("/kennel", kennelRoutes);
+app.use("/kennels", kennelRoutes);
 app.use('/owner', ownerRoutes);
 app.use('/profile', profileRoutes);
 app.use('/match', matchRoutes);
