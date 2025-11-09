@@ -55,10 +55,10 @@
 
 ## 4. Kennel List
 
-* [ ] **Backend**  
+* [X] **Backend**  
   * `GET /kennel` → list with `name`, `location`, `members[]`, `dogs[]`  
 
-* [ ] **Frontend**  
+* [X] **Frontend**  
   * `/kennels` screen  
   * Card list: name, location, member count  
   * Click → view members (optional)  
