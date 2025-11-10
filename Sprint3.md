@@ -44,7 +44,7 @@
   * `POST /message` → `{ matchId, message }`  
   * Include `senderId`, `timestamp`  
 
-* [ ] **Frontend**  
+* [X] **Frontend**  
   * `/chat/:matchId`  
   * Auto-poll every 3s (or use WebSocket later)  
   * Scroll to bottom, show sender name  
@@ -69,11 +69,11 @@
 
 ## 5. Navigation & UX
 
-* [ ] **App Layout**  
+* [X] **App Layout**  
   * Bottom tabs: **Home**, **Matches**, **Chat**, **Kennels**, **Profile**  
   * Auto-redirect `/` → `/profile/:id` if logged in  
 
-* [ ] **Logout Button**  
+* [X] **Logout Button**  
   * Clear `localStorage`, go to `/login`  
 
 * **Done when:** Full app flow feels natural

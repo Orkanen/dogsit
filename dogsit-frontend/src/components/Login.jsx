@@ -27,7 +27,6 @@ export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const from = location.state?.from?.pathname || '/'
@@ -35,12 +34,6 @@ export default function Login() {
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
-
-  useEffect(() => {
-    if (isLoggedIn) {
-      navigate(from, { replace: true });
-    }
-  }, [isLoggedIn, navigate, from]);
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -51,7 +44,6 @@ export default function Login() {
       const data = await api.login(form.email, form.password)
       localStorage.setItem('token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
-
       navigate(from, { replace: true })
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Login failed')
