@@ -138,3 +138,6 @@ Sitters -> Potential to block future requests from ID
 Sitters -> Public Profiles (unless blocked)
 Sitters -> Pet Care History (As proof of work, resumé)
 View Sitters Profiles (Public)
+Pet's should be publicly available.
+Owner's creating a dog profile should not be able to link it to a kennel, possibly done through request.
+Kennels should have the ability to add dogs that their owners own to the kennel, while also being able to accept a request to link a dog to their kennel (this will create a connection between the dog they have owned and sold (Owned/Available/Sold field?) and the dog that the owner bought and requests a link to kennel with.)

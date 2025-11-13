@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from '../hooks/auth'
 import api from '../lib/api'
 
 const inputStyle = {
@@ -31,6 +32,8 @@ export default function Login() {
   const location = useLocation()
   const from = location.state?.from?.pathname || '/'
 
+  const { login } = useAuth()
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
@@ -44,6 +47,7 @@ export default function Login() {
       const data = await api.login(form.email, form.password)
       localStorage.setItem('token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
+      login(data.token, data.user)
       navigate(from, { replace: true })
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Login failed')
