@@ -154,12 +154,22 @@
   - Link sold dogs (status: Owned/Available/Sold)  
 - **Pet Identifiers** (chip, tattoo)  
 - **Sitter Blocking**  
-- **Public Sitter Profiles**  
 - **Pet Care History (résumé)**  
-- **WebSocket Chat** (real-time)  
 - **Search & Filters** (breed, age, location)
 
 ---
 
 **Sprint 4 = Pet-Centric MVP**  
 **Public, Editable, Connected, Beautiful**
+
+Recommendations for Sitters:
+We recommend that sitters using our service always remain truthful and humble.
+As not doing so might come with consequences such as the following:
+- Injury to self. (Icon: Dog biting hand image)
+- Damage to property. (Icon: Dog piss on box)
+- Harm to animals. (Icon: Dog biting dog)
+- Danger to others. (Icon: Dog bark at humans - pulling at leesh)
+We do not take responsibility in the result of any of the services provided through us, we provide a hosting service.
+We claim the right to terminate accounts that do not share our values or disregard for their own or others safety.
+
+Make introduction/guide for newly created clubs/kennels/owners/sitters, further explaining what the website provides and how to get started.

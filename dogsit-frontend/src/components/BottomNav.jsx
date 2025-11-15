@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
-import { useAuth } from "../hooks/auth";
+import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const linkStyle = {
   flex: 1,
@@ -13,15 +13,15 @@ const linkStyle = {
 const activeStyle = { ...linkStyle, color: "#1d4ed8", borderTop: "2px solid #1d4ed8" };
 
 export default function BottomNav() {
-    const { user, loading, logout } = useAuth()
-    const currentPath = window.location.pathname;
-  
+  const { user, loading, logout } = useAuth();
+  const location = useLocation();
+  const currentPath = location.pathname;
 
-    if (loading) return null;
+  if (loading) return null;
 
-    const handleLogout = () => {
-    logout()
-    }
+  const handleLogout = () => {
+    logout();
+  };
 
   return (
     <nav
@@ -41,38 +41,59 @@ export default function BottomNav() {
       <Link to="/" style={currentPath === "/" ? activeStyle : linkStyle}>
         Home
       </Link>
-      <Link to="/kennels" style={currentPath.startsWith("/kennels") ? activeStyle : linkStyle}>
+      <Link
+        to="/kennels"
+        style={currentPath.startsWith("/kennel") ? activeStyle : linkStyle}
+      >
         Kennels
       </Link>
 
       {/* LOGGED IN → PRIVATE TABS */}
       {user ? (
         <>
-        <Link to="/matches" style={currentPath.startsWith("/matches") ? activeStyle : linkStyle}>
+          <Link
+            to="/matches"
+            style={currentPath.startsWith("/matches") ? activeStyle : linkStyle}
+          >
             Matches
-        </Link>
-        <Link to="/chat" style={currentPath.startsWith("/chat") ? activeStyle : linkStyle}>
+          </Link>
+          <Link
+            to="/chat"
+            style={currentPath.startsWith("/chat") ? activeStyle : linkStyle}
+          >
             Chat
-        </Link>
-        <Link to={`/profile/${user.id}`} style={currentPath.startsWith(`/profile/${user.id}`) ? activeStyle : linkStyle}>
+          </Link>
+          <Link
+            to={`/profile/${user.id}`}
+            style={currentPath === `/profile/${user.id}` ? activeStyle : linkStyle}
+          >
             Profile
-        </Link>
-        <Link to="/pets/my" style={currentPath.startsWith("/pets/my") ? activeStyle : linkStyle}>
+          </Link>
+          <Link
+            to="/pets/my"
+            style={currentPath === "/pets/my" ? activeStyle : linkStyle}
+          >
             My Pets
-        </Link>
-            <button
+          </Link>
+          <button
             onClick={handleLogout}
             style={{ ...linkStyle, color: "#dc2626", borderTop: "none" }}
-            >
+          >
             Logout
-            </button>
+          </button>
         </>
       ) : (
         <>
-          <Link to="/login" style={currentPath === "/login" ? activeStyle : linkStyle}>
+          <Link
+            to="/login"
+            style={currentPath === "/login" ? activeStyle : linkStyle}
+          >
             Login
           </Link>
-          <Link to="/register" style={currentPath === "/register" ? activeStyle : linkStyle}>
+          <Link
+            to="/register"
+            style={currentPath === "/register" ? activeStyle : linkStyle}
+          >
             Register
           </Link>
         </>

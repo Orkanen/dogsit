@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../lib/api";
-import { useAuth } from "../hooks/auth";
+import { useAuth } from "../context/AuthContext";
 
 export default function PetProfile() {
   const { id } = useParams();
@@ -80,6 +80,15 @@ export default function PetProfile() {
           ← Back to My Pets
         </Link>
       </div>
+
+      {canEdit && (
+        <Link
+          to={`/pets/${pet.id}/edit`}
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+        >
+          Edit Pet
+        </Link>
+      )}
     </div>
   );
 }

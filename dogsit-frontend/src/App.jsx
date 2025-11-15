@@ -13,7 +13,8 @@ import Chat from "./pages/Chat";
 import ChatList from "./pages/ChatList";
 import PetProfile from "./pages/PetProfile";
 import CreatePet from "./pages/CreatePet";
-import MyPets from "./pages/MyPets"
+import MyPets from "./pages/MyPets";
+import EditPet from "./pages/EditPet"
 
 export default function App() {
   return (
@@ -37,6 +38,7 @@ export default function App() {
         <Route path="/chat/:matchId" element={<Chat />} />
         <Route path="/pets/my" element={<MyPets />} />
         <Route path="/pets/new" element={<CreatePet />} />
+        <Route path="/pets/:id/edit" element={<EditPet />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

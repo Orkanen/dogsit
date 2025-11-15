@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { useAuth } from '../hooks/auth'
+import { useAuth } from "../context/AuthContext";
 import api from '../lib/api'
 
 const inputStyle = {

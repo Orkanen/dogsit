@@ -48,6 +48,13 @@ const api = {
     body: JSON.stringify(data),
     }).then(handleResponse),
 
+    updateUserRoles: (roles) =>
+    fetch(`${API_BASE}/profile/roles`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ roles }),
+    }).then(handleResponse),
+
     // MATCHES
     getMatches: () =>
     fetch(`${API_BASE}/match`, { headers: getAuthHeaders() }).then(handleResponse),
@@ -125,9 +132,9 @@ const api = {
 
     updatePet: (petId, petData) =>
     fetch(`${API_BASE}/pets/${petId}`, {
-        method: "PUT",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(petData),
+      method: "PUT",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(petData),
     }).then(handleResponse),
 
     deletePet: (petId) =>
