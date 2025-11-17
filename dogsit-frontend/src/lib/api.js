@@ -103,8 +103,54 @@ const api = {
 
     // KENNELS
     getKennels: () =>
-    fetch(`${API_BASE}/kennels`, {
+    fetch(`${API_BASE}/kennel`, {
         headers: { "Content-Type": "application/json" }
+    }).then(handleResponse),
+
+    getMyKennels: () =>
+    fetch(`${API_BASE}/kennel/my`, {
+        headers: getAuthHeaders(),
+    }).then(handleResponse),
+
+    getKennelRequests: () =>
+    fetch(`${API_BASE}/kennel/requests`, {
+        headers: getAuthHeaders(),
+    }).then(handleResponse),
+
+    acceptKennelRequest: (reqId) =>
+    fetch(`${API_BASE}/kennel/requests/${reqId}/accept`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+    }).then(handleResponse),
+
+    rejectKennelRequest: (reqId) =>
+    fetch(`${API_BASE}/kennel/requests/${reqId}/reject`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+    }).then(handleResponse),
+    
+    createKennel: (data) =>
+    fetch(`${API_BASE}/kennel`, {
+        method: "POST",
+        headers: {
+        ...getAuthHeaders(),
+        "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+    }).then(handleResponse),
+
+    requestKennelMembership: (kennelId, message = "") =>
+    fetch(`${API_BASE}/kennel/${kennelId}/request-membership`, {
+        method: "POST",
+        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+    }).then(handleResponse),
+
+    requestPetLink: (kennelId, petId, message = "") =>
+    fetch(`${API_BASE}/kennel/${kennelId}/request-pet`, {
+        method: "POST",
+        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ petId, message }),
     }).then(handleResponse),
 
     // === PETS ===

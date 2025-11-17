@@ -41,7 +41,7 @@
 * [X] **Backend**  
   * `GET /pets/my` → owner’s pets with `images`, `kennel`, `name`  
 
-* [ ] **Frontend**  
+* [X] **Frontend**  
   * `/pets/my` → grid of **pet cards** (photo, name, breed, kennel)  
   * **+ Add Pet** button  
   * Click → `/pets/:id`  
@@ -173,3 +173,5 @@ We do not take responsibility in the result of any of the services provided thro
 We claim the right to terminate accounts that do not share our values or disregard for their own or others safety.
 
 Make introduction/guide for newly created clubs/kennels/owners/sitters, further explaining what the website provides and how to get started.
+As Admin Create Notification Banners, with link to more information and set time for duration.
+As Trainer, Kennel, Company, Advertisers be able to purchase the ability to create announcement Notification banners based on duration, time, geographical area,

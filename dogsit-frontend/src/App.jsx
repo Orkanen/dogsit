@@ -15,6 +15,8 @@ import PetProfile from "./pages/PetProfile";
 import CreatePet from "./pages/CreatePet";
 import MyPets from "./pages/MyPets";
 import EditPet from "./pages/EditPet"
+import KennelDashboard from "./pages/KennelDashboard";
+import KennelCreate from "./pages/KennelCreate";
 
 export default function App() {
   return (
@@ -22,7 +24,7 @@ export default function App() {
       {/* PUBLIC */}
       <Route element={<PublicLayout />}>
         <Route path="/" element={<Home />} />
-        <Route path="/kennels" element={<Kennels />} />
+        <Route path="/kennel" element={<Kennels />} />
         <Route path="/kennel/:id" element={<KennelDetail />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -39,6 +41,8 @@ export default function App() {
         <Route path="/pets/my" element={<MyPets />} />
         <Route path="/pets/new" element={<CreatePet />} />
         <Route path="/pets/:id/edit" element={<EditPet />} />
+        <Route path="/kennel/dashboard" element={<KennelDashboard />} />
+        <Route path="/kennel/create" element={<KennelCreate />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

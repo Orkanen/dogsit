@@ -42,7 +42,7 @@ export default function BottomNav() {
         Home
       </Link>
       <Link
-        to="/kennels"
+        to="/kennel"
         style={currentPath.startsWith("/kennel") ? activeStyle : linkStyle}
       >
         Kennels

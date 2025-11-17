@@ -28,11 +28,6 @@ router.post("/", authenticateToken, async (req, res) => {
     if (ownerId === parseInt(sitterId))
       return res.status(400).json({ error: "Cannot match with yourself" });
 
-    const existing = await prisma.match.findUnique({
-      where: { ownerId_sitterId: { ownerId, sitterId: parseInt(sitterId) } }
-    });
-    if (existing) return res.status(409).json({ error: "Match request already exists", match: existing });
-
     const match = await prisma.match.create({
       data: { ownerId, sitterId: parseInt(sitterId) },
       include: {
@@ -80,21 +75,33 @@ async function updateMatchStatus(req, res, newStatus) {
 router.patch("/:id/accept", authenticateToken, (req, res) => updateMatchStatus(req, res, "ACCEPTED"));
 router.patch("/:id/reject", authenticateToken, (req, res) => updateMatchStatus(req, res, "REJECTED"));
 
-// CANCEL
+// CANCEL – keep messages for audit
 router.delete("/:id", authenticateToken, async (req, res) => {
   const ownerId = req.user.id;
   const matchId = parseInt(req.params.id);
 
   try {
-    const match = await prisma.match.findUnique({ where: { id: matchId } });
+    const match = await prisma.match.findUnique({
+      where: { id: matchId },
+      select: { id: true, ownerId: true, status: true }
+    });
+
     if (!match) return res.status(404).json({ error: "Match not found" });
     if (match.ownerId !== ownerId) return res.status(403).json({ error: "Unauthorized" });
     if (match.status !== "PENDING") return res.status(400).json({ error: "Cannot cancel – already responded" });
 
-    await prisma.match.delete({ where: { id: matchId } });
-    res.json({ message: "Match request cancelled" });
+    await prisma.match.delete({
+      where: { id: matchId }
+    });
+
+    res.json({ message: "Match request cancelled. Chat history preserved." });
   } catch (err) {
-    console.error(err);
+    console.error("DELETE /match/:id error:", err);
+    if (err.code === "P2003") {
+      return res.status(500).json({
+        error: "Cannot delete match because it has associated data. Contact support."
+      });
+    }
     res.status(500).json({ error: "Failed to cancel match" });
   }
 });
