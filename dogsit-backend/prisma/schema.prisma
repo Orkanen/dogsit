@@ -44,6 +44,8 @@ model User {
   // Kennel membership
   kennelMemberships KennelMember[]
 
+  membershipRequests KennelMembershipRequest[] @relation("UserKennelMembershipRequests")
+
   // Messages
   sentMessages Message[]
 
@@ -56,6 +58,7 @@ model User {
 
   // Club membership
   clubMemberships ClubMember[]
+  
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -120,6 +123,9 @@ model Kennel {
   awards    Award[]
   images    Image[]
 
+  membershipRequests KennelMembershipRequest[] @relation("KennelMembershipRequests")
+  petRequests        KennelPetRequest[]        @relation("KennelPetRequests")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -151,6 +157,8 @@ model Pet {
 
   owner         User?    @relation("PetOwner", fields: [ownerId], references: [id])
   kennel        Kennel?  @relation(fields: [kennelId], references: [id])
+
+  kennelRequests KennelPetRequest[] @relation("PetKennelRequests")
 
   // Family tree
   parentMotherId Int?
@@ -248,12 +256,12 @@ model Award {
 /* ---------- MESSAGE ---------- */
 model Message {
   id        Int      @id @default(autoincrement())
-  matchId   Int
+  matchId   Int?
   senderId  Int
   message   String
   timestamp DateTime @default(now())
 
-  match     Match    @relation(fields: [matchId], references: [id])
+  match     Match?   @relation(fields: [matchId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   sender    User     @relation(fields: [senderId], references: [id])
 
   @@index([matchId, timestamp])
@@ -281,4 +289,48 @@ model ClubMember {
   user   User @relation(fields: [userId], references: [id])
 
   @@id([clubId, userId])
+}
+
+/* --------- REQUESTS ------------*/
+
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+// 1. Membership Request (user wants to join kennel staff)
+model KennelMembershipRequest {
+  id        Int           @id @default(autoincrement())
+  kennelId  Int
+  userId    Int
+  message   String?
+  status    RequestStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  kennel    Kennel        @relation("KennelMembershipRequests", fields: [kennelId], references: [id])
+  user      User          @relation("UserKennelMembershipRequests", fields: [userId], references: [id])
+
+  @@unique([kennelId, userId])
+  @@index([kennelId])
+  @@index([userId])
+}
+
+// 2. Pet Link Request ("This dog was bred by this kennel")
+model KennelPetRequest {
+  id        Int           @id @default(autoincrement())
+  kennelId  Int
+  petId     Int
+  message   String?
+  status    RequestStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  kennel    Kennel        @relation("KennelPetRequests", fields: [kennelId], references: [id])
+  pet       Pet           @relation("PetKennelRequests", fields: [petId], references: [id])
+
+  @@unique([kennelId, petId])
+  @@index([kennelId])
+  @@index([petId])
 }

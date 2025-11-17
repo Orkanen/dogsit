@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import api from "../lib/api";
 import { Link } from "react-router-dom";
 
@@ -7,7 +7,7 @@ export default function Matches() {
   const [data, setData] = useState({ sent: [], received: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const linkStyle = { color: '#1d4ed8', textDecoration: 'underline', fontWeight: '500' }
+  const linkStyle = { color: '#1d4ed8', textDecoration: 'underline', fontWeight: '500' };
 
   const load = async () => {
     try {
@@ -26,67 +26,50 @@ export default function Matches() {
   }, []);
 
   const handleAccept = async (id) => {
-    try {
-      await api.acceptMatch(id);
-      load();
-    } catch (e) {
-      alert("Failed to accept");
-    }
+    try { await api.acceptMatch(id); load(); } catch { alert("Failed to accept"); }
   };
-
   const handleReject = async (id) => {
-    try {
-      await api.rejectMatch(id);
-      load();
-    } catch (e) {
-      alert("Failed to reject");
-    }
+    try { await api.rejectMatch(id); load(); } catch { alert("Failed to reject"); }
   };
-
   const handleCancel = async (id) => {
-    try {
-      await api.cancelMatch(id);
-      load();
-    } catch (e) {
-      alert("Failed to cancel match");
-    }
+    try { await api.cancelMatch(id); load(); } catch { alert("Failed to cancel match"); }
   };
 
   const matches = tab === "sent" ? data.sent : data.received;
 
   return (
     <div style={{ maxWidth: "48rem", margin: "0 auto", padding: "1rem", fontFamily: "system-ui, sans-serif" }}>
-        <h1 style={{ fontSize: "1.5rem", fontWeight: "bold", marginBottom: "1rem" }}>
-            My Matches
-        </h1>
+      <h1 style={{ fontSize: "1.5rem", fontWeight: "bold", marginBottom: "1rem" }}>
+        My Matches
+      </h1>
 
-        <div style={{ marginTop: "1rem" }}>
-            <Link to="/sitters" style={linkStyle}>Find Sitters</Link>
-        </div>
+      <div style={{ marginTop: "1rem" }}>
+        <Link to="/sitters" style={linkStyle}>Find Sitters</Link>
+      </div>
 
-        <div style={{ display: "flex", borderBottom: "1px solid #d1d5db", marginBottom: "1rem" }}>
-            {["sent", "received"].map((t) => (
-                <button
-                    key={t}
-                    onClick={() => setTab(t)}
-                    style={{
-                        padding: "0.5rem 1rem",
-                        textTransform: "capitalize",
-                        borderBottomWidth: tab === t ? "2px" : "0",
-                        borderBottomStyle: tab === t ? "solid" : "none",
-                        borderBottomColor: tab === t ? "#2563eb" : "transparent",
-                        fontWeight: tab === t ? "500" : "normal",
-                        background: "none",
-                        borderLeft: "none",
-                        borderRight: "none",
-                        borderTop: "none",
-                        cursor: "pointer",
-                    }}
-                    >
-                    {t}
-                </button>
-            ))}
-        </div>
+      <div style={{ display: "flex", borderBottom: "1px solid #d1d5db", marginBottom: "1rem" }}>
+        {["sent", "received"].map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            style={{
+              padding: "0.5rem 1rem",
+              textTransform: "capitalize",
+              borderBottomWidth: tab === t ? "2px" : "0",
+              borderBottomStyle: tab === t ? "solid" : "none",
+              borderBottomColor: tab === t ? "#2563eb" : "transparent",
+              fontWeight: tab === t ? "500" : "normal",
+              background: "none",
+              borderLeft: "none",
+              borderRight: "none",
+              borderTop: "none",
+              cursor: "pointer",
+            }}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
 
       {loading && <p>Loading…</p>}
       {error && <p style={{ color: "#dc2626" }}>{error}</p>}
@@ -154,6 +137,20 @@ export default function Matches() {
                       {m.status}
                     </span>
                   </p>
+
+                  {m.status === "ACCEPTED" && (
+                    <Link
+                      to={`/chat/${m.id}`}
+                      style={{
+                        ...linkStyle,
+                        display: "inline-block",
+                        marginTop: "0.5rem",
+                        fontSize: "0.875rem",
+                      }}
+                    >
+                      Chat
+                    </Link>
+                  )}
                 </div>
 
                 {canAct && (
@@ -209,8 +206,9 @@ export default function Matches() {
             );
           })
         )}
-        <Link to="/" style={linkStyle}>Back to Home</Link>
       </div>
+
+      <Link to="/" style={linkStyle}>Back to Home</Link>
     </div>
   );
 }

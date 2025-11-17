@@ -48,6 +48,13 @@ const api = {
     body: JSON.stringify(data),
     }).then(handleResponse),
 
+    updateUserRoles: (roles) =>
+    fetch(`${API_BASE}/profile/roles`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ roles }),
+    }).then(handleResponse),
+
     // MATCHES
     getMatches: () =>
     fetch(`${API_BASE}/match`, { headers: getAuthHeaders() }).then(handleResponse),
@@ -96,10 +103,110 @@ const api = {
 
     // KENNELS
     getKennels: () =>
-    fetch(`${API_BASE}/kennels`, {
+    fetch(`${API_BASE}/kennel`, {
         headers: { "Content-Type": "application/json" }
-    }).then(handleResponse)
+    }).then(handleResponse),
 
+    getMyKennels: () =>
+    fetch(`${API_BASE}/kennel/my`, {
+        headers: getAuthHeaders(),
+    }).then(handleResponse),
+
+    getKennelRequests: () =>
+    fetch(`${API_BASE}/kennel/requests`, {
+        headers: getAuthHeaders(),
+    }).then(handleResponse),
+
+    acceptKennelRequest: (reqId) =>
+    fetch(`${API_BASE}/kennel/requests/${reqId}/accept`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+    }).then(handleResponse),
+
+    rejectKennelRequest: (reqId) =>
+    fetch(`${API_BASE}/kennel/requests/${reqId}/reject`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+    }).then(handleResponse),
+    
+    createKennel: (data) =>
+    fetch(`${API_BASE}/kennel`, {
+        method: "POST",
+        headers: {
+        ...getAuthHeaders(),
+        "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+    }).then(handleResponse),
+
+    requestKennelMembership: (kennelId, message = "") =>
+    fetch(`${API_BASE}/kennel/${kennelId}/request-membership`, {
+        method: "POST",
+        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+    }).then(handleResponse),
+
+    requestPetLink: (kennelId, petId, message = "") =>
+    fetch(`${API_BASE}/kennel/${kennelId}/request-pet`, {
+        method: "POST",
+        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ petId, message }),
+    }).then(handleResponse),
+
+    // === PETS ===
+    createPet: (petData) =>
+    fetch(`${API_BASE}/pets`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(petData),
+    }).then(handleResponse),
+
+    getPet: (petId) =>
+    fetch(`${API_BASE}/pets/${petId}`, {
+        headers: getAuthHeaders(),
+    }).then(handleResponse),
+
+    getMyPets: () =>
+    fetch(`${API_BASE}/pets/my`, {
+        headers: getAuthHeaders(),
+    }).then(handleResponse),
+
+    getPet: (petId) =>
+    fetch(`${API_BASE}/pets/${petId}`, {
+        headers: getAuthHeaders(),
+    }).then(handleResponse),
+
+    updatePet: (petId, petData) =>
+    fetch(`${API_BASE}/pets/${petId}`, {
+      method: "PUT",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(petData),
+    }).then(handleResponse),
+
+    deletePet: (petId) =>
+    fetch(`${API_BASE}/pets/${petId}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+    }).then(handleResponse),
+
+    // Attach image to pet
+    attachImageToPet: (petId, imageId) =>
+    fetch(`${API_BASE}/pets/${petId}/image`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ imageId }),
+    }).then(handleResponse),
+
+    // === IMAGES ===
+    uploadImage: (formData) =>
+    fetch(`${API_BASE}/images`, {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            // DON'T set Content-Type — let browser set multipart/form-data
+        },
+        body: formData,
+    }).then(handleResponse),
 }
 
 export default api

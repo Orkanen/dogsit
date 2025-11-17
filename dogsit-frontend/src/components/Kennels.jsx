@@ -19,7 +19,7 @@ export default function Kennels() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    api.getKennels('/kennels')
+    api.getKennels('/kennel')
       .then(setKennels)
       .catch(err => setError(err.message || 'Failed to load kennels'))
       .finally(() => setLoading(false));
@@ -55,6 +55,8 @@ export default function Kennels() {
       )}
         <div style={{ marginTop: '1rem' }}>
             <Link to="/" style={linkStyle}>Back to Home</Link>
+            <br></br>
+            <Link to="/kennel/dashboard">Kennel Dashboard</Link>
         </div>
     </div>
   );

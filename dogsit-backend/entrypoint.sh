@@ -24,12 +24,11 @@ else
   echo "\nok"
 fi
 
-echo "Running: npx prisma migrate deploy"
-npx prisma migrate deploy
+echo "Syncing schema to database (bypassing broken migrations)"
+npx prisma db push --force-reset --skip-generate
 
 echo "Running seed script"
 node prisma/seed.js || echo "Seed script failed (continuing)"
 
-# Start the actual app (passed via docker-compose.yml command)
 echo "Starting Node.js app..."
 exec "$@"
