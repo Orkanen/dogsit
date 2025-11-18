@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import api from "../lib/api";
+import api from "../api/index";
 
 export default function MyPets() {
   const { user, loading: authLoading } = useAuth();

@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import { getToken, isTokenExpired } from '../lib/auth';
+import { getToken, isTokenExpired } from '../../lib/auth';
 
 export default function RequireAuth({ children }) {
   const token = getToken();

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import api from "../lib/api";
+import api from "../api/index";
 
 export default function ChatList() {
   const [chats, setChats] = useState([]);

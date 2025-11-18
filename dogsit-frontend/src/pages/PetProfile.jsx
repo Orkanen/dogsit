@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import api from "../lib/api";
+import api from "../api/index";
 import { useAuth } from "../context/AuthContext";
 
 export default function PetProfile() {

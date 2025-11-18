@@ -1,0 +1,128 @@
+@use "@/styles/abstracts/variables" as *;
+
+.kennels-page {
+  min-height: 100vh;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+
+  &__main {
+    flex: 1;
+    padding: $spacing-8;
+    padding-bottom: $spacing-4;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  &__header {
+    text-align: center;
+    margin-bottom: $spacing-12;
+
+    h1 { font-size: 2.5rem; font-weight: 800; color: #1e293b; margin-bottom: $spacing-4; }
+    p { font-size: 1.25rem; color: #64748b; max-width: 600px; margin: 0 auto; }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: $spacing-6; 
+    margin-bottom: $spacing-12;
+    padding: 0 $spacing-2;
+    box-sizing: border-box;
+  }
+
+  .kennel-card__wrapper {
+    border-radius: 1rem;
+    overflow: hidden;
+    height: fit-content;
+  }
+
+  &__loading,
+  &__error,
+  &__empty {
+    text-align: center;
+    font-size: 1.25rem;
+    color: #64748b;
+    padding: $spacing-16;
+  }
+
+  &__error { color: #dc2626; }
+
+  &__footer {
+    padding: $spacing-8 $spacing-4;
+    background: white;
+    border-top: 1px solid #e2e8f0;
+    text-align: center;
+    display: flex;
+    gap: $spacing-8;
+    justify-content: center;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+
+    a {
+      color: $primary;
+      font-weight: 600;
+      text-decoration: none;
+      padding: 0.5rem 0;
+
+      &:hover { text-decoration: underline; }
+    }
+  }
+
+  @media (max-width: 640px) {
+    &__grid {
+      grid-template-columns: 1fr;
+      gap: $spacing-6;
+    }
+
+    &__main {
+      padding: $spacing-6 $spacing-4;
+    }
+
+    &__footer {
+      flex-direction: column;
+      gap: $spacing-4;
+    }
+  }
+}
+
+.skeleton {
+  animation: pulse 1.5s ease-in-out infinite;
+  border-radius: 1rem;
+  padding: $spacing-6;
+  background: white;
+  border: 1px solid #e2e8f0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  &__name {
+    height: 1.8rem;
+    width: 70%;
+    background: #e2e8f0;
+    border-radius: 0.5rem;
+    margin-bottom: $spacing-3;
+  }
+
+  &__location {
+    height: 1rem;
+    width: 50%;
+    background: #e2e8f0;
+    border-radius: 0.5rem;
+    margin-bottom: $spacing-6;
+  }
+
+  &__stats {
+    height: 1rem;
+    width: 80%;
+    background: #e2e8f0;
+    border-radius: 0.5rem;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}

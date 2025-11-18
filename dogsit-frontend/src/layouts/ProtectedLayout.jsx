@@ -1,6 +1,6 @@
 import { Outlet, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import BottomNav from "../components/BottomNav";
+import BottomNav from "../components/layout/BottomNav";
 
 export default function ProtectedLayout() {
   const { user, loading } = useAuth();

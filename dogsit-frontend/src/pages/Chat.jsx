@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getSocket } from '../lib/socket';
-import api from '../lib/api';
+import api from "../api/index";
 
 const messageStyle = (isOwn) => ({
   maxWidth: '70%',
