@@ -309,6 +309,8 @@ model KennelMembershipRequest {
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
+  type String @default("MEMBERSHIP")
+
   kennel    Kennel        @relation("KennelMembershipRequests", fields: [kennelId], references: [id])
   user      User          @relation("UserKennelMembershipRequests", fields: [userId], references: [id])
 
@@ -326,6 +328,8 @@ model KennelPetRequest {
   status    RequestStatus @default(PENDING)
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+
+  type      String       @default("PET_LINK")
 
   kennel    Kennel        @relation("KennelPetRequests", fields: [kennelId], references: [id])
   pet       Pet           @relation("PetKennelRequests", fields: [petId], references: [id])

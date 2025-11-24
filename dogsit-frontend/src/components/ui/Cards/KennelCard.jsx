@@ -14,7 +14,7 @@ export default function KennelCard({ kennel }) {
       </div>
 
       <div className="kennel-card__stats">
-        <span>{memberCount} Member{memberCount !== 1 ? 's' : ''} Member</span>
+        <span>{memberCount} Member{memberCount !== 1 ? 's' : ''}</span>
         <span>•</span>
         <span>{dogCount} Dog{dogCount !== 1 ? 's' : ''}</span>
       </div>

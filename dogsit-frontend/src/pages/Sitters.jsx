@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import api from "../api/index";
 import { Link, useNavigate } from "react-router-dom";
+import api from "../api/index";
+import "@/styles/pages/_sitters.scss";
 
 export default function Sitters() {
   const [sitters, setSitters] = useState([]);
@@ -10,9 +11,10 @@ export default function Sitters() {
   const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem("user") || "null");
-  const isOwner = user?.role === "owner";
-  const linkStyle = { color: '#1d4ed8', textDecoration: 'underline', fontWeight: '500' }
-
+  const isOwner = user && (
+    user.role === "owner" || 
+    (Array.isArray(user.roles) && user.roles.includes("owner"))
+  );
   useEffect(() => {
     const load = async () => {
       try {
@@ -22,12 +24,11 @@ export default function Sitters() {
           isOwner ? api.getMatches() : Promise.resolve({ sent: [], received: [] }),
         ]);
 
-        const filtered = sittersData.filter(s => s.id !== user?.id);
-
+        const filtered = sittersData.filter((s) => s.id !== user?.id);
         setSitters(filtered);
         setMatches(isOwner ? [...matchesData.sent, ...matchesData.received] : []);
       } catch (e) {
-        setError(e.message || "Failed to load");
+        setError(e.message || "Failed to load sitters");
       } finally {
         setLoading(false);
       }
@@ -36,97 +37,98 @@ export default function Sitters() {
   }, [isOwner, user?.id]);
 
   const handleRequest = async (sitterId) => {
-    if (!isOwner) return alert("Only owners can request");
+    if (!isOwner) {
+      alert("Only dog owners can send requests");
+      return;
+    }
     try {
       await api.createMatch(sitterId);
-      alert("Request sent!");
+      alert("Request sent successfully!");
       navigate("/matches");
     } catch (e) {
-      alert(e.message || "Request failed");
+      alert(e.message || "Failed to send request");
     }
   };
 
   const hasMatchWith = (sitterId) => {
-    return matches.some(m => 
-      m.sitterId === sitterId || m.ownerId === sitterId
-    );
+    return matches.some((m) => m.sitterId === sitterId || m.ownerId === sitterId);
   };
 
-  if (loading) return <p style={{ padding: "1rem" }}>Loading…</p>;
-  if (error) return <p style={{ color: "#dc2626", padding: "1rem" }}>{error}</p>;
+  if (loading) return <div className="sitters__loader">Loading sitters…</div>;
+  if (error) return <div className="sitters__error">{error}</div>;
 
   return (
-    <div style={{ maxWidth: "48rem", margin: "0 auto", padding: "1rem", fontFamily: "system-ui, sans-serif" }}>
-      <h1 style={{ fontSize: "1.5rem", fontWeight: "bold", marginBottom: "1rem" }}>
-        Find a Sitter
-      </h1>
+    <section className="sitters">
+      <header className="sitters__header">
+        <h1 className="sitters__title">Find a Sitter</h1>
+        <Link to="/matches" className="sitters__back-link">
+          Back to Matches
+        </Link>
+      </header>
 
       {sitters.length === 0 ? (
-        <p style={{ color: "#6b7280" }}>No sitters available.</p>
+        <div className="sitters__empty">
+          <p>No sitters available at the moment.</p>
+          <p className="sitters__empty-hint">
+            Check back soon — more caring sitters join every day.
+          </p>
+        </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <div className="sitters__grid">
           {sitters.map((s) => {
             const profile = s.profile || {};
             const alreadyMatched = isOwner && hasMatchWith(s.id);
 
             return (
-              <div
+              <article
                 key={s.id}
-                style={{
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.5rem",
-                  padding: "1rem",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  opacity: alreadyMatched ? 0.7 : 1,
-                }}
+                className={`sitters__card ${alreadyMatched ? "sitters__card--matched" : ""}`}
               >
-                <div style={{ flex: 1 }}>
-                  <Link
-                    to={`/profile/${s.id}`}
-                    style={{ fontWeight: "600", color: "#1d4ed8", textDecoration: "underline" }}
-                  >
-                    {profile.firstName || "—"} {profile.lastName || ""} ({profile.location || "No location"})
+                <div className="sitters__info">
+                  <Link to={`/profile/${s.id}`} className="sitters__name">
+                    {profile.firstName || "User"} {profile.lastName || ""}
                   </Link>
-                  {profile.bio && (
-                    <p style={{ margin: "0.5rem 0", fontSize: "0.875rem", color: "#4b5563" }}>
-                      {profile.bio}
+
+                  {profile.location && (
+                    <p className="sitters__location">{profile.location}</p>
+                  )}
+
+                  {profile.bio ? (
+                    <p className="sitters__bio">{profile.bio}</p>
+                  ) : (
+                    <p className="sitters__bio sitters__bio--empty">
+                      No bio yet.
                     </p>
                   )}
+
                   {profile.servicesOffered && (
-                    <p style={{ fontSize: "0.75rem", color: "#6b7280" }}>
-                      Services: {profile.servicesOffered}
+                    <p className="sitters__services">
+                      <strong>Services:</strong> {profile.servicesOffered}
                     </p>
                   )}
+
                   {alreadyMatched && (
-                    <p style={{ fontSize: "0.75rem", color: "#f59e0b", fontStyle: "italic" }}>
-                      Already requested
-                    </p>
+                    <p className="sitters__status">Request already sent</p>
                   )}
                 </div>
 
-                {isOwner && !alreadyMatched && (
+                {/* Button is ALWAYS visible — just changes style when matched */}
+                {isOwner && (
                   <button
                     onClick={() => handleRequest(s.id)}
-                    style={{
-                      padding: "0.5rem 1rem",
-                      background: "#2563eb",
-                      color: "white",
-                      borderRadius: "0.375rem",
-                      border: "none",
-                      cursor: "pointer",
-                    }}
+                    disabled={alreadyMatched}
+                    className={`sitters__request-btn ${
+                      alreadyMatched ? "sitters__request-btn--sent" : ""
+                    }`}
                   >
-                    Request
+                    {alreadyMatched ? "Request Sent" : "Send Request"}
                   </button>
                 )}
-              </div>
+              </article>
             );
           })}
         </div>
       )}
-      <Link to="/matches" style={linkStyle}>Back to Matches</Link>
-    </div>
+    </section>
   );
 }

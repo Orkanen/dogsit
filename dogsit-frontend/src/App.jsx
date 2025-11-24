@@ -17,6 +17,8 @@ import MyPets from "./pages/MyPets";
 import EditPet from "./pages/EditPet"
 import KennelDashboard from "./pages/KennelDashboard";
 import KennelCreate from "./pages/KennelCreate";
+import KennelPetRequests from "./pages/KennelPetRequests";
+import MyPetProfile from "./pages/MyPetProfile";
 
 export default function App() {
   return (
@@ -43,6 +45,9 @@ export default function App() {
         <Route path="/pets/:id/edit" element={<EditPet />} />
         <Route path="/kennel/dashboard" element={<KennelDashboard />} />
         <Route path="/kennel/create" element={<KennelCreate />} />
+        <Route path="/kennel/requests/pet" element={<KennelPetRequests />} />
+        <Route path="/kennel/requests/pet/:requestId" element={<KennelPetRequests />} />
+        <Route path="/my-pets/:id" element={<MyPetProfile />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

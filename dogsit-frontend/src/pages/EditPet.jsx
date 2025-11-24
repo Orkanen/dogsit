@@ -1,27 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import api from "../api/index";
-
-const inputStyle = {
-  width: "100%",
-  padding: "0.75rem",
-  margin: "0.5rem 0",
-  border: "1px solid #ccc",
-  borderRadius: "4px",
-  fontSize: "1rem",
-};
-const buttonStyle = {
-  width: "100%",
-  padding: "0.75rem",
-  marginTop: "1rem",
-  background: "#f59e0b",
-  color: "white",
-  border: "none",
-  borderRadius: "4px",
-  cursor: "pointer",
-  fontSize: "1rem",
-};
-const linkStyle = { color: "#1d4ed8", textDecoration: "underline", fontWeight: "500" };
+import api from "@/api"; // Fixed: use alias
+import "@/styles/pages/_editPet.scss";
 
 export default function EditPet() {
   const { id } = useParams();
@@ -41,24 +21,31 @@ export default function EditPet() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  // -----------------------------------------------------------------
-  // Load existing pet
-  // -----------------------------------------------------------------
+  // Kennel verification state
+  const [kennels, setKennels] = useState([]);
+  const [petKennelId, setPetKennelId] = useState(null); // null = not verified
+  const [hasPendingRequest, setHasPendingRequest] = useState(false);
+  const [selectedKennelId, setSelectedKennelId] = useState("");
+  const [requestLoading, setRequestLoading] = useState(false);
+  const [requestError, setRequestError] = useState("");
+
+  // Load pet data
   useEffect(() => {
     const fetchPet = async () => {
       try {
         const pet = await api.getPet(id);
         setForm({
-          name: pet.name,
-          species: pet.species,
+          name: pet.name || "",
+          species: pet.species || "Dog",
           breed: pet.breed || "",
           color: pet.color || "",
-          sex: pet.sex,
+          sex: pet.sex || "MALE",
           age: pet.age || "",
         });
         setPreview(pet.images?.[0]?.url || null);
+        setPetKennelId(pet.kennelId || null); // Track current kennel
       } catch (err) {
-        setError(err.message);
+        setError(err.message || "Failed to load pet");
       } finally {
         setLoading(false);
       }
@@ -66,9 +53,34 @@ export default function EditPet() {
     fetchPet();
   }, [id]);
 
-  // -----------------------------------------------------------------
-  // Form helpers
-  // -----------------------------------------------------------------
+  // Load kennels + check for pending request
+  useEffect(() => {
+    const loadVerificationData = async () => {
+      try {
+        const [allKennels, requests] = await Promise.all([
+          api.getKennels(),
+          api.getKennelRequests(), // Only returns requests for kennels you own
+        ]);
+
+        setKennels(allKennels);
+
+        // Check if this pet has a pending request (from any kennel)
+        const pending = requests.find(
+          (r) => r.type === "PET_LINK" && r.pet.id === parseInt(id) && r.status === "PENDING"
+        );
+        if (pending) {
+          setHasPendingRequest(true);
+        }
+      } catch (err) {
+        console.error("Failed to load kennel data:", err);
+      }
+    };
+
+    if (!loading) {
+      loadVerificationData();
+    }
+  }, [id, loading]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -88,7 +100,6 @@ export default function EditPet() {
     setSaving(true);
 
     try {
-      // 1. Upload new image (if any)
       let imageId = null;
       if (imageFile) {
         const formData = new FormData();
@@ -98,145 +109,152 @@ export default function EditPet() {
         imageId = img.id;
       }
 
-      // 2. Update pet data
       await api.updatePet(id, {
         ...form,
-        age: form.age ? +form.age : null,
+        age: form.age ? Number(form.age) : null,
       });
 
-      // 3. Attach image (if uploaded)
       if (imageId) {
         await api.attachImageToPet(id, imageId);
       }
 
       navigate(`/pets/${id}`);
     } catch (err) {
-      setError(err.message || "Failed to save");
+      setError(err.message || "Failed to save pet");
     } finally {
       setSaving(false);
     }
   };
 
-  // -----------------------------------------------------------------
-  // Render
-  // -----------------------------------------------------------------
-  if (loading) return <div style={{ padding: "2rem" }}>Loading...</div>;
-  if (error && !preview) return <div style={{ padding: "2rem", color: "red" }}>{error}</div>;
+  const handleVerificationRequest = async () => {
+    if (!selectedKennelId) return;
+    if (!confirm("Send verification request to this kennel?")) return;
+
+    setRequestLoading(true);
+    setRequestError("");
+
+    try {
+      await api.requestPetLink(
+        Number(selectedKennelId),
+        Number(id),
+        `Please verify that ${form.name} was born/registered in your kennel.`
+      );
+      setHasPendingRequest(true);
+      alert("Verification request sent! The kennel owner will review it.");
+      setSelectedKennelId("");
+    } catch (err) {
+      setRequestError(err.message || "Failed to send request");
+    } finally {
+      setRequestLoading(false);
+    }
+  };
+
+  if (loading) return <div className="edit-pet__loader">Loading pet…</div>;
+  if (error && !preview) return <div className="edit-pet__error">Failed to load pet</div>;
 
   return (
-    <div
-      style={{
-        padding: "2rem",
-        fontFamily: "system-ui, sans-serif",
-        maxWidth: "600px",
-        margin: "0 auto",
-      }}
-    >
-      <h2>Edit Pet</h2>
-
-      {/* Image preview + upload */}
-      {preview && (
-        <div style={{ marginBottom: "1rem", textAlign: "center" }}>
-          <img
-            src={preview}
-            alt="Pet"
-            style={{
-              maxWidth: "150px",
-              maxHeight: "150px",
-              objectFit: "cover",
-              borderRadius: "4px",
-            }}
-          />
-        </div>
-      )}
-      <label style={{ display: "block", marginBottom: "0.5rem" }}>
-        Change Photo
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleImage}
-          style={{ display: "block", marginTop: "0.25rem" }}
-        />
-      </label>
-
-      {error && <p style={{ color: "red", marginBottom: "1rem" }}>{error}</p>}
-
-      <form onSubmit={handleSubmit}>
-        <input
-          name="name"
-          placeholder="Name"
-          value={form.name}
-          onChange={handleChange}
-          style={inputStyle}
-          required
-        />
-        <select
-          name="species"
-          value={form.species}
-          onChange={handleChange}
-          style={inputStyle}
-        >
-          <option>Dog</option>
-          <option>Cat</option>
-          <option>Rabbit</option>
-          <option>Bird</option>
-          <option>Other</option>
-        </select>
-        <input
-          name="breed"
-          placeholder="Breed"
-          value={form.breed}
-          onChange={handleChange}
-          style={inputStyle}
-        />
-        <input
-          name="color"
-          placeholder="Color"
-          value={form.color}
-          onChange={handleChange}
-          style={inputStyle}
-        />
-        <div style={{ margin: "0.5rem 0" }}>
-          <label style={{ marginRight: "1rem" }}>
-            <input
-              type="radio"
-              name="sex"
-              value="MALE"
-              checked={form.sex === "MALE"}
-              onChange={handleChange}
-            />{" "}
-            Male
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="sex"
-              value="FEMALE"
-              checked={form.sex === "FEMALE"}
-              onChange={handleChange}
-            />{" "}
-            Female
-          </label>
-        </div>
-        <input
-          name="age"
-          type="number"
-          placeholder="Age (years)"
-          value={form.age}
-          onChange={handleChange}
-          style={inputStyle}
-        />
-
-        <button type="submit" style={buttonStyle} disabled={saving}>
-          {saving ? "Saving..." : "Save Pet"}
-        </button>
-      </form>
-
-      <div style={{ marginTop: "1rem" }}>
-        <Link to={`/pets/${id}`} style={linkStyle}>
+    <section className="edit-pet">
+      <header className="edit-pet__header">
+        <h1 className="edit-pet__title">Edit Pet</h1>
+        <Link to={`/pets/${id}`} className="edit-pet__back">
           Back to Pet
         </Link>
-      </div>
-    </div>
+      </header>
+
+      <form onSubmit={handleSubmit} className="edit-pet__form">
+        {/* Image Upload */}
+        <div className="edit-pet__image-section">
+          {preview ? (
+            <img src={preview} alt="Pet preview" className="edit-pet__preview" />
+          ) : (
+            <div className="edit-pet__placeholder">No photo</div>
+          )}
+          <label className="edit-pet__image-label">
+            Change Photo
+            <input type="file" accept="image/*" onChange={handleImage} />
+          </label>
+        </div>
+
+        {error && <p className="edit-pet__error-msg">{error}</p>}
+
+        {/* Form Fields */}
+        <div className="edit-pet__fields">
+          <input name="name" placeholder="Name *" value={form.name} onChange={handleChange} required className="edit-pet__input" />
+          <select name="species" value={form.species} onChange={handleChange} className="edit-pet__input edit-pet__select">
+            <option>Dog</option>
+            <option>Cat</option>
+            <option>Rabbit</option>
+            <option>Bird</option>
+            <option>Other</option>
+          </select>
+          <input name="breed" placeholder="Breed" value={form.breed} onChange={handleChange} className="edit-pet__input" />
+          <input name="color" placeholder="Color" value={form.color} onChange={handleChange} className="edit-pet__input" />
+          <div className="edit-pet__radio-group">
+            <label className="edit-pet__radio">
+              <input type="radio" name="sex" value="MALE" checked={form.sex === "MALE"} onChange={handleChange} />
+              <span>Male</span>
+            </label>
+            <label className="edit-pet__radio">
+              <input type="radio" name="sex" value="FEMALE" checked={form.sex === "FEMALE"} onChange={handleChange} />
+              <span>Female</span>
+            </label>
+          </div>
+          <input name="age" type="number" placeholder="Age (years)" value={form.age} onChange={handleChange} className="edit-pet__input" min="0" max="30" />
+        </div>
+
+        {/* Kennel Verification Section */}
+        <div className="edit-pet__kennel-verification">
+          <h3>Official Kennel of Origin</h3>
+
+          {petKennelId ? (
+            <p className="edit-pet__status success">
+              This pet is officially verified and registered with a kennel.
+            </p>
+          ) : hasPendingRequest ? (
+            <p className="edit-pet__status warning">
+              Verification request pending… The kennel owner is reviewing.
+            </p>
+          ) : (
+            <>
+              <p>
+                Was <strong>{form.name || "this pet"}</strong> born in a registered kennel? 
+                Select the kennel below to request official verification.
+              </p>
+
+              <select
+                value={selectedKennelId}
+                onChange={(e) => setSelectedKennelId(e.target.value)}
+                className="edit-pet__input edit-pet__select"
+                disabled={requestLoading}
+              >
+                <option value="">Select kennel of origin…</option>
+                {kennels.map((k) => (
+                  <option key={k.id} value={k.id}>
+                    {k.name} {k.location ? `(${k.location})` : ""}
+                  </option>
+                ))}
+              </select>
+
+              {selectedKennelId && (
+                <button
+                  type="button"
+                  onClick={handleVerificationRequest}
+                  disabled={requestLoading}
+                  className="edit-pet__verification-btn"
+                >
+                  {requestLoading ? "Sending Request…" : "Request Official Verification"}
+                </button>
+              )}
+
+              {requestError && <p className="edit-pet__error-msg">{requestError}</p>}
+            </>
+          )}
+        </div>
+
+        <button type="submit" disabled={saving} className="edit-pet__submit">
+          {saving ? "Saving…" : "Save Pet"}
+        </button>
+      </form>
+    </section>
   );
 }

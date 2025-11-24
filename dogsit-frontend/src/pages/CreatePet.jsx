@@ -1,27 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import api from "../api/index";
-
-const inputStyle = {
-  width: "100%",
-  padding: "0.75rem",
-  margin: "0.5rem 0",
-  border: "1px solid #ccc",
-  borderRadius: "4px",
-  fontSize: "1rem",
-};
-const buttonStyle = {
-  width: "100%",
-  padding: "0.75rem",
-  marginTop: "1rem",
-  background: "#f59e0b",
-  color: "white",
-  border: "none",
-  borderRadius: "4px",
-  cursor: "pointer",
-  fontSize: "1rem",
-};
-const linkStyle = { color: "#1d4ed8", textDecoration: "underline", fontWeight: "500" };
+import api from "@/api";
+import "@/styles/pages/_createPet.scss";
 
 export default function CreatePet() {
   const navigate = useNavigate();
@@ -33,15 +13,36 @@ export default function CreatePet() {
     color: "",
     sex: "MALE",
     age: "",
+    kennelId: "",
   });
+
   const [imageFile, setImageFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [kennels, setKennels] = useState([]);
+  const [myKennels, setMyKennels] = useState([]);
+
+  // Load kennels on mount
+  useEffect(() => {
+    const loadKennels = async () => {
+      try {
+        const [all, mine] = await Promise.all([
+          api.getKennels(),
+          api.getMyKennels(),
+        ]);
+        setKennels(all);
+        setMyKennels(mine.map(k => k.id));
+      } catch (err) {
+        console.error("Failed to load kennels");
+      }
+    };
+    loadKennels();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm(prev => ({ ...prev, [name]: value }));
   };
 
   const handleImage = (e) => {
@@ -67,89 +68,141 @@ export default function CreatePet() {
         imageId = img.id;
       }
 
-      const pet = await api.createPet({
+      const petData = {
         ...form,
-        age: form.age ? +form.age : null,
-      });
+        age: form.age ? Number(form.age) : null,
+        kennelId: form.kennelId ? Number(form.kennelId) : null,
+      };
 
+      // CASE 1: User owns the selected kennel → auto-verify (no request needed)
+      if (form.kennelId && myKennels.includes(Number(form.kennelId))) {
+        const pet = await api.createPet(petData);
+        if (imageId) await api.attachImageToPet(pet.id, imageId);
+        navigate(`/pets/${pet.id}`);
+        return;
+      }
+
+      // CASE 2: Selected a kennel they don't own → create pet + auto-send request
+      if (form.kennelId) {
+        const pet = await api.createPet({ ...petData, kennelId: null });
+        if (imageId) await api.attachImageToPet(pet.id, imageId);
+
+        try {
+          await api.requestPetLink(
+            Number(form.kennelId),
+            pet.id,
+            `This pet (${form.name}) was born in your kennel. Please verify.`
+          );
+          alert("Pet created! Verification request sent to the kennel.");
+        } catch (reqErr) {
+          alert("Pet created, but failed to send verification request. You can request it later from Edit Pet.");
+        }
+        navigate(`/pets/${pet.id}`);
+        return;
+      }
+
+      // CASE 3: No kennel selected → normal creation
+      const pet = await api.createPet(petData);
       if (imageId) await api.attachImageToPet(pet.id, imageId);
-
       navigate(`/pets/${pet.id}`);
+
     } catch (err) {
-      setError(err.message || "Failed to create");
+      setError(err.message || "Failed to create pet");
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div
-      style={{
-        padding: "2rem",
-        fontFamily: "system-ui, sans-serif",
-        maxWidth: "600px",
-        margin: "0 auto",
-      }}
-    >
-      <h2>Add New Pet</h2>
+    <section className="create-pet">
+      <header className="create-pet__header">
+        <h1 className="create-pet__title">Add New Pet</h1>
+        <Link to="/pets/my" className="create-pet__back">Back to My Pets</Link>
+      </header>
 
-      {preview && (
-        <div style={{ marginBottom: "1rem", textAlign: "center" }}>
-          <img
-            src={preview}
-            alt="Preview"
-            style={{
-              maxWidth: "150px",
-              maxHeight: "150px",
-              objectFit: "cover",
-              borderRadius: "4px",
-            }}
-          />
-        </div>
-      )}
-      <label style={{ display: "block", marginBottom: "0.5rem" }}>
-        Photo
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleImage}
-          style={{ display: "block", marginTop: "0.25rem" }}
-        />
-      </label>
-
-      {error && <p style={{ color: "red", marginBottom: "1rem" }}>{error}</p>}
-
-      <form onSubmit={handleSubmit}>
-        <input name="name" placeholder="Name" value={form.name} onChange={handleChange} style={inputStyle} required />
-        <select name="species" value={form.species} onChange={handleChange} style={inputStyle}>
-          <option>Dog</option>
-          <option>Cat</option>
-          <option>Rabbit</option>
-          <option>Bird</option>
-          <option>Other</option>
-        </select>
-        <input name="breed" placeholder="Breed" value={form.breed} onChange={handleChange} style={inputStyle} />
-        <input name="color" placeholder="Color" value={form.color} onChange={handleChange} style={inputStyle} />
-        <div style={{ margin: "0.5rem 0" }}>
-          <label style={{ marginRight: "1rem" }}>
-            <input type="radio" name="sex" value="MALE" checked={form.sex === "MALE"} onChange={handleChange} /> Male
-          </label>
-          <label>
-            <input type="radio" name="sex" value="FEMALE" checked={form.sex === "FEMALE"} onChange={handleChange} /> Female
+      <form onSubmit={handleSubmit} className="create-pet__form">
+        {/* Image */}
+        <div className="create-pet__image-section">
+          {preview ? (
+            <img src={preview} alt="Preview" className="create-pet__preview" />
+          ) : (
+            <div className="create-pet__placeholder">Pet photo</div>
+          )}
+          <label className="create-pet__image-label">
+            Upload Photo
+            <input type="file" accept="image/*" onChange={handleImage} />
           </label>
         </div>
-        <input name="age" type="number" placeholder="Age (years)" value={form.age} onChange={handleChange} style={inputStyle} />
 
-        <button type="submit" style={buttonStyle} disabled={saving}>
-          {saving ? "Creating..." : "Create Pet"}
+        {error && <p className="create-pet__error">{error}</p>}
+
+        <div className="create-pet__fields">
+          <input name="name" placeholder="Name *" value={form.name} onChange={handleChange} required className="create-pet__input" />
+
+          <select name="species" value={form.species} onChange={handleChange} className="create-pet__input create-pet__select">
+            <option>Dog</option><option>Cat</option><option>Rabbit</option><option>Bird</option><option>Other</option>
+          </select>
+
+          <input name="breed" placeholder="Breed" value={form.breed} onChange={handleChange} className="create-pet__input" />
+          <input name="color" placeholder="Color" value={form.color} onChange={handleChange} className="create-pet__input" />
+
+          <div className="create-pet__radio-group">
+            <label className="create-pet__radio">
+              <input type="radio" name="sex" value="MALE" checked={form.sex === "MALE"} onChange={handleChange} />
+              <span>Male</span>
+            </label>
+            <label className="create-pet__radio">
+              <input type="radio" name="sex" value="FEMALE" checked={form.sex === "FEMALE"} onChange={handleChange} />
+              <span>Female</span>
+            </label>
+          </div>
+
+          <input name="age" type="number" placeholder="Age ( strument)" value={form.age} onChange={handleChange} className="create-pet__input" min="0" max="30" />
+
+          {/* KENNEL OF ORIGIN – Smart Dropdown */}
+          <div className="create-pet__kennel-section">
+            <label className="create-pet__label">
+              <strong>Kennel of Origin (Optional)</strong><br />
+              <span className="create-pet__hint">
+                Was this pet born in a registered kennel?
+              </span>
+            </label>
+
+            <select
+              name="kennelId"
+              value={form.kennelId}
+              onChange={handleChange}
+              className="create-pet__input create-pet__select"
+            >
+              <option value="">— Not from a registered kennel —</option>
+              {kennels.map(k => {
+                const isMine = myKennels.includes(k.id);
+                return (
+                  <option key={k.id} value={k.id}>
+                    {k.name} {k.location && `(${k.location})`}
+                    {isMine && " ← Your Kennel"}
+                  </option>
+                );
+              })}
+            </select>
+
+            {form.kennelId && myKennels.includes(Number(form.kennelId)) && (
+              <p className="create-pet__auto-verify">
+                This pet will be automatically verified (you own this kennel)
+              </p>
+            )}
+            {form.kennelId && !myKennels.includes(Number(form.kennelId)) && (
+              <p className="create-pet__pending-verify">
+                A verification request will be sent to the kennel owner
+              </p>
+            )}
+          </div>
+        </div>
+
+        <button type="submit" disabled={saving} className="create-pet__submit">
+          {saving ? "Creating…" : "Create Pet"}
         </button>
       </form>
-
-      <div style={{ marginTop: "1rem" }}>
-        <Link to="/pets/my" style={linkStyle}>
-          Back to My Pets
-        </Link>
-      </div>
-    </div>
+    </section>
   );
 }

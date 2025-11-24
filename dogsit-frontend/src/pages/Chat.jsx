@@ -1,53 +1,47 @@
-import { useState, useEffect, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { getSocket } from '../lib/socket';
+import { useState, useEffect, useRef } from "react";
+import { useParams, Link } from "react-router-dom";
+import { getSocket } from "../lib/socket";
 import api from "../api/index";
-
-const messageStyle = (isOwn) => ({
-  maxWidth: '70%',
-  padding: '0.75rem 1rem',
-  margin: '0.5rem 0',
-  borderRadius: '18px',
-  alignSelf: isOwn ? 'flex-end' : 'flex-start',
-  background: isOwn ? '#f59e0b' : '#e5e7eb',
-  color: isOwn ? 'white' : 'black',
-});
+import { useAuth } from "../context/AuthContext";
+import "@/styles/pages/_chat.scss";
 
 export default function Chat() {
   const { matchId } = useParams();
+  const { user } = useAuth();
   const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
   const messagesEndRef = useRef(null);
   const socket = useRef(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const data = await api.getMessages(matchId, localStorage.getItem('token'));
+        const data = await api.getMessages(matchId);
         setMessages(data);
-        setLoading(false);
       } catch (err) {
-        console.error(err);
+        console.error("Failed to load messages:", err);
+      } finally {
+        setLoading(false);
       }
     };
+
     fetchMessages();
 
     socket.current = getSocket();
-    socket.current.emit('join-match', parseInt(matchId));
+    socket.current.emit("join-match", parseInt(matchId));
 
-    socket.current.on('new-message', (msg) => {
-      setMessages(prev => [...prev, msg]);
+    socket.current.on("new-message", (msg) => {
+      setMessages((prev) => [...prev, msg]);
     });
 
     return () => {
-      socket.current?.off('new-message');
-      socket.current?.emit('leave-match', parseInt(matchId));
+      socket.current?.off("new-message");
+      socket.current?.emit("leave-match", parseInt(matchId));
     };
   }, [matchId]);
 
@@ -57,81 +51,67 @@ export default function Chat() {
 
   const sendMessage = () => {
     if (!input.trim()) return;
-    socket.current.emit('send-message', {
+
+    socket.current.emit("send-message", {
       matchId: parseInt(matchId),
-      message: input.trim()
+      message: input.trim(),
     });
-    setInput('');
+
+    setInput("");
   };
 
-  if (loading) return <div style={{ padding: '2rem' }}>Loading chat...</div>;
+  const isOwnMessage = (msg) => msg.sender.id === user?.id;
+
+  if (loading) return <div className="chat__loader">Loading chat…</div>;
 
   return (
-    <div style={{ padding: '1rem', maxWidth: '800px', margin: '0 auto', fontFamily: 'system-ui' }}>
-      <Link to="/matches" style={{ color: '#1d4ed8', textDecoration: 'underline' }}>
-        ← Back to Matches
-      </Link>
+    <section className="chat">
+      <header className="chat__header">
+        <Link to="/chats" className="chat__back">
+          Back to Chats
+        </Link>
+      </header>
 
-      <div style={{
-        height: '70vh',
-        overflowY: 'auto',
-        padding: '1rem',
-        background: '#f9fafb',
-        borderRadius: '8px',
-        margin: '1rem 0',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
-        {messages.map(msg => (
+      <div className="chat__messages">
+        {messages.map((msg) => (
           <div
             key={msg.id}
-            style={{
-              alignSelf: msg.sender.id === user.id ? 'flex-end' : 'flex-start',
-              maxWidth: '70%'
-            }}
+            className={`chat__message-wrapper ${isOwnMessage(msg) ? "chat__message-wrapper--own" : ""}`}
           >
-            <div style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '0.25rem' }}>
-              {msg.sender.id === user.id ? 'You' : msg.sender.profile?.firstName || 'User'}
+            <div className="chat__sender">
+              {isOwnMessage(msg) ? "You" : msg.sender.profile?.firstName || "User"}
             </div>
-            <div style={messageStyle(msg.sender.id === user.id)}>
+
+            <div className={`chat__bubble ${isOwnMessage(msg) ? "chat__bubble--own" : ""}`}>
               {msg.message}
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#9ca3af', textAlign: msg.sender.id === user.id ? 'right' : 'left' }}>
-              {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+
+            <div className="chat__timestamp">
+              {new Date(msg.timestamp).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </div>
           </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
 
-      <div style={{ display: 'flex', gap: '0.5rem' }}>
+      <div className="chat__input-area">
         <input
+          type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+          onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), sendMessage())}
           placeholder="Type a message..."
-          style={{
-            flex: 1,
-            padding: '0.75rem',
-            border: '1px solid #ccc',
-            borderRadius: '8px',
-            fontSize: '1rem'
-          }}
+          className="chat__input"
         />
-        <button
-          onClick={sendMessage}
-          style={{
-            padding: '0.75rem 1.5rem',
-            background: '#f59e0b',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer'
-          }}
-        >
-          Send
+        <button onClick={sendMessage} className="chat__send-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+          </svg>
         </button>
       </div>
-    </div>
+    </section>
   );
 }

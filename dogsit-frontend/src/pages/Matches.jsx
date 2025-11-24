@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import api from "../api/index";
 import { Link } from "react-router-dom";
+import api from "../api/index";
+import "@/styles/pages/_matches.scss";
 
 export default function Matches() {
-  const [tab, setTab] = useState("sent");
+  const [tab, setTab] = useState("received");
   const [data, setData] = useState({ sent: [], received: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const linkStyle = { color: '#1d4ed8', textDecoration: 'underline', fontWeight: '500' };
 
   const load = async () => {
     try {
@@ -26,189 +26,147 @@ export default function Matches() {
   }, []);
 
   const handleAccept = async (id) => {
-    try { await api.acceptMatch(id); load(); } catch { alert("Failed to accept"); }
+    try {
+      await api.acceptMatch(id);
+      load();
+    } catch {
+      alert("Failed to accept match");
+    }
   };
+
   const handleReject = async (id) => {
-    try { await api.rejectMatch(id); load(); } catch { alert("Failed to reject"); }
+    try {
+      await api.rejectMatch(id);
+      load();
+    } catch {
+      alert("Failed to reject match");
+    }
   };
+
   const handleCancel = async (id) => {
-    try { await api.cancelMatch(id); load(); } catch { alert("Failed to cancel match"); }
+    try {
+      await api.cancelMatch(id);
+      load();
+    } catch {
+      alert("Failed to cancel match");
+    }
   };
 
   const matches = tab === "sent" ? data.sent : data.received;
 
   return (
-    <div style={{ maxWidth: "48rem", margin: "0 auto", padding: "1rem", fontFamily: "system-ui, sans-serif" }}>
-      <h1 style={{ fontSize: "1.5rem", fontWeight: "bold", marginBottom: "1rem" }}>
-        My Matches
-      </h1>
+    <section className="matches">
+      <header className="matches__header">
+        <h1 className="matches__title">My Matches</h1>
+        <Link to="/sitters" className="matches__find-link">
+          Find Sitters
+        </Link>
+      </header>
 
-      <div style={{ marginTop: "1rem" }}>
-        <Link to="/sitters" style={linkStyle}>Find Sitters</Link>
-      </div>
-
-      <div style={{ display: "flex", borderBottom: "1px solid #d1d5db", marginBottom: "1rem" }}>
-        {["sent", "received"].map((t) => (
+      <div className="matches__tabs">
+        {["received", "sent"].map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            style={{
-              padding: "0.5rem 1rem",
-              textTransform: "capitalize",
-              borderBottomWidth: tab === t ? "2px" : "0",
-              borderBottomStyle: tab === t ? "solid" : "none",
-              borderBottomColor: tab === t ? "#2563eb" : "transparent",
-              fontWeight: tab === t ? "500" : "normal",
-              background: "none",
-              borderLeft: "none",
-              borderRight: "none",
-              borderTop: "none",
-              cursor: "pointer",
-            }}
+            className={`matches__tab ${tab === t ? "matches__tab--active" : ""}`}
           >
-            {t}
+            {t === "received" ? "Incoming" : "Outgoing"}
+            <span className="matches__count">
+              {t === "received" ? data.received.length : data.sent.length}
+            </span>
           </button>
         ))}
       </div>
 
-      {loading && <p>Loading…</p>}
-      {error && <p style={{ color: "#dc2626" }}>{error}</p>}
+      {loading && <div className="matches__loader">Loading matches…</div>}
+      {error && <div className="matches__error">{error}</div>}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <div className="matches__list">
         {matches.length === 0 ? (
-          <p style={{ color: "#6b7280" }}>No {tab} matches yet.</p>
+          <div className="matches__empty">
+            <p>No {tab === "received" ? "incoming" : "outgoing"} matches yet.</p>
+            {tab === "received" && (
+              <Link to="/sitters" className="matches__cta">
+                Someone out there is waiting for you
+              </Link>
+            )}
+          </div>
         ) : (
           matches.map((m) => {
             const partner = tab === "sent" ? m.sitter : m.owner;
-
-            if (!partner) {
-              return (
-                <div key={m.id} style={{ color: "#dc2626", fontStyle: "italic" }}>
-                  Error: Missing partner data
-                </div>
-              );
-            }
+            if (!partner) return null;
 
             const profile = partner.profile || {};
-
-            const canAct =
-              (tab === "received" && m.status === "PENDING") ||
-              (tab === "sent" && m.status === "PENDING");
+            const isPending = m.status === "PENDING";
+            const canAct = isPending;
 
             return (
-              <div
-                key={m.id}
-                style={{
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.5rem",
-                  padding: "1rem",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <div>
+              <article key={m.id} className="matches__card">
+                <div className="matches__info">
                   <Link
                     to={`/profile/${partner.id}`}
-                    style={{
-                      fontWeight: "600",
-                      color: "#1d4ed8",
-                      textDecoration: "underline",
-                    }}
+                    className="matches__name-link"
                   >
-                    {profile.firstName || "—"} {profile.lastName || ""}
+                    {profile.firstName || "User"} {profile.lastName || ""}
                   </Link>
-                  <p style={{ fontSize: "0.875rem", color: "#4b5563", margin: "0.25rem 0" }}>
-                    {profile.location || ""}
-                  </p>
-                  <p style={{ fontSize: "0.75rem" }}>
+
+                  {profile.location && (
+                    <p className="matches__location">{profile.location}</p>
+                  )}
+
+                  <div className="matches__status">
                     Status:{" "}
                     <span
-                      style={{
-                        fontWeight: "500",
-                        color:
-                          m.status === "ACCEPTED"
-                            ? "#16a34a"
-                            : m.status === "REJECTED"
-                            ? "#dc2626"
-                            : "#6b7280",
-                      }}
+                      className={`matches__status-text matches__status-text--${m.status.toLowerCase()}`}
                     >
                       {m.status}
                     </span>
-                  </p>
+                  </div>
 
                   {m.status === "ACCEPTED" && (
-                    <Link
-                      to={`/chat/${m.id}`}
-                      style={{
-                        ...linkStyle,
-                        display: "inline-block",
-                        marginTop: "0.5rem",
-                        fontSize: "0.875rem",
-                      }}
-                    >
-                      Chat
+                    <Link to={`/chat/${m.id}`} className="matches__chat-link">
+                      Open Chat
                     </Link>
                   )}
                 </div>
 
                 {canAct && (
-                  <div style={{ display: "flex", gap: "0.5rem" }}>
-                    {tab === "received" && m.status === "PENDING" && (
+                  <div className="matches__actions">
+                    {tab === "received" && (
                       <>
                         <button
                           onClick={() => handleAccept(m.id)}
-                          style={{
-                            padding: "0.25rem 0.75rem",
-                            background: "#16a34a",
-                            color: "white",
-                            borderRadius: "0.25rem",
-                            border: "none",
-                            cursor: "pointer",
-                          }}
+                          className="matches__btn matches__btn--accept"
                         >
                           Accept
                         </button>
                         <button
                           onClick={() => handleReject(m.id)}
-                          style={{
-                            padding: "0.25rem 0.75rem",
-                            background: "#dc2626",
-                            color: "white",
-                            borderRadius: "0.25rem",
-                            border: "none",
-                            cursor: "pointer",
-                          }}
+                          className="matches__btn matches__btn--reject"
                         >
                           Reject
                         </button>
                       </>
                     )}
-                    {tab === "sent" && m.status === "PENDING" && (
+                    {tab === "sent" && (
                       <button
                         onClick={() => handleCancel(m.id)}
-                        style={{
-                          padding: "0.25rem 0.75rem",
-                          background: "#4b5563",
-                          color: "white",
-                          borderRadius: "0.25rem",
-                          border: "none",
-                          cursor: "pointer",
-                        }}
+                        className="matches__btn matches__btn--cancel"
                       >
                         Cancel
                       </button>
                     )}
                   </div>
                 )}
-              </div>
+              </article>
             );
           })
         )}
       </div>
 
-      <Link to="/" style={linkStyle}>Back to Home</Link>
-    </div>
+      <Link to="/" className="matches__home-link">
+        Back to Home
+      </Link>
+    </section>
   );
 }

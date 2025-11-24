@@ -1,32 +1,13 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import api from "../api/index";
-
-const inputStyle = {
-  width: "100%",
-  padding: "0.75rem",
-  margin: "0.5rem 0",
-  border: "1px solid #ccc",
-  borderRadius: "4px",
-  fontSize: "1rem",
-};
-const buttonStyle = {
-  width: "100%",
-  padding: "0.75rem",
-  marginTop: "1rem",
-  background: "#f59e0b",
-  color: "white",
-  border: "none",
-  borderRadius: "4px",
-  cursor: "pointer",
-  fontSize: "1rem",
-};
-const linkStyle = { color: "#1d4ed8", textDecoration: "underline", fontWeight: "500" };
+import { useAuth } from "../context/AuthContext";
+import "@/styles/pages/_profile.scss";
 
 export default function Profile() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+  const { user } = useAuth();
 
   const [profile, setProfile] = useState(null);
   const [form, setForm] = useState({
@@ -42,16 +23,13 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  // -----------------------------------------------------------------
-  // Load profile + roles
-  // -----------------------------------------------------------------
   useEffect(() => {
-    if (!currentUser) {
+    if (!user) {
       navigate("/login");
       return;
     }
-    if (Number(id) !== currentUser.id) {
-      setError("Access denied.");
+    if (Number(id) !== user.id) {
+      setError("You can only edit your own profile.");
       setLoading(false);
       return;
     }
@@ -61,7 +39,7 @@ export default function Profile() {
         const data = await api.getProfile();
         setProfile(data);
 
-        const editable = data.roles?.filter((r) =>
+        const editableRoles = data.roles?.filter((r) =>
           ["owner", "sitter"].includes(r)
         ) || [];
 
@@ -72,21 +50,19 @@ export default function Profile() {
           location: data.profile?.location || "",
           dogBreed: data.profile?.dogBreed || "",
           servicesOffered: data.profile?.servicesOffered || "",
-          roles: editable,
+          roles: editableRoles,
         });
       } catch (err) {
-        setError(err.message);
-        if (err.message.includes("401")) navigate("/login");
+        setError(err.message || "Failed to load profile");
+        if (err.message?.includes("401")) navigate("/login");
       } finally {
         setLoading(false);
       }
     };
-    load();
-  }, [id, currentUser?.id, navigate]);
 
-  // -----------------------------------------------------------------
-  // Handlers
-  // -----------------------------------------------------------------
+    load();
+  }, [id, user?.id, navigate]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -105,6 +81,7 @@ export default function Profile() {
     e.preventDefault();
     setError("");
     setSaving(true);
+
     try {
       await api.updateProfile({
         firstName: form.firstName,
@@ -117,88 +94,129 @@ export default function Profile() {
 
       await api.updateUserRoles(form.roles);
 
-      alert("Profile & roles saved!");
+      alert("Profile saved beautifully!");
     } catch (err) {
-        setError(err.message || "Failed to save");
+      setError(err.message || "Failed to save profile");
     } finally {
-        setSaving(false);
+      setSaving(false);
     }
   };
 
-  // -----------------------------------------------------------------
-  // Render
-  // -----------------------------------------------------------------
-  if (loading) return <div style={{ padding: "2rem" }}>Loading...</div>;
-  if (error && !profile)
-    return <div style={{ padding: "2rem", color: "red" }}>{error}</div>;
+  if (loading) return <div className="profile__loader">Loading your profile…</div>;
+  if (error && !profile) return <div className="profile__error">{error}</div>;
 
-  const editableRoles = [
-    { value: "owner", label: "Owner" },
-    { value: "sitter", label: "Sitter" },
+  const roles = [
+    { value: "owner", label: "Dog Owner", },
+    { value: "sitter", label: "Dog Sitter", },
   ];
 
   return (
-    <div
-      style={{
-        padding: "2rem",
-        fontFamily: "system-ui, sans-serif",
-        maxWidth: "600px",
-        margin: "0 auto",
-      }}
-    >
-      <h2>Edit Profile</h2>
-      <p>
-        <strong>Email:</strong> {profile.email}
-      </p>
-
-      {/* ROLES — DIRECT FROM BACKEND, NO MAPPING */}
-      <p>
-        <strong>Roles:</strong>{" "}
-        {profile.roles?.length
-          ? profile.roles.map(r => r.charAt(0).toUpperCase() + r.slice(1)).join(", ")
-          : "None"}
-      </p>
-
-      {error && <p style={{ color: "red", marginBottom: "1rem" }}>{error}</p>}
-
-      <form onSubmit={handleSubmit}>
-        <input name="firstName" placeholder="First Name" value={form.firstName} onChange={handleChange} style={inputStyle} />
-        <input name="lastName" placeholder="Last Name" value={form.lastName} onChange={handleChange} style={inputStyle} />
-        <textarea name="bio" placeholder="Bio" value={form.bio} onChange={handleChange} style={{ ...inputStyle, height: "100px" }} />
-        <input name="location" placeholder="Location" value={form.location} onChange={handleChange} style={inputStyle} />
-        <input name="dogBreed" placeholder="Dog Breed" value={form.dogBreed} onChange={handleChange} style={inputStyle} />
-        <input name="servicesOffered" placeholder="Services" value={form.servicesOffered} onChange={handleChange} style={inputStyle} />
-
-        <div style={{ margin: "1rem 0" }}>
-          <p style={{ fontWeight: "600", marginBottom: "0.5rem" }}>
-            Select your roles
-          </p>
-          {editableRoles.map(({ value, label }) => (
-            <label
-              key={value}
-              style={{ display: "block", margin: "0.4rem 0", cursor: "pointer" }}
-            >
-              <input
-                type="checkbox"
-                checked={form.roles.includes(value)}
-                onChange={() => toggleRole(value)}
-                style={{ marginRight: "0.5rem" }}
-              />
-              {label}
-            </label>
-          ))}
-        </div>
-
-        <button type="submit" style={buttonStyle} disabled={saving}>
-          {saving ? "Saving..." : "Save Profile"}
-        </button>
-      </form>
-
-      <div style={{ marginTop: "1rem" }}>
-        <Link to="/" style={linkStyle}>
+    <section className="profile">
+      <header className="profile__header">
+        <h1 className="profile__title">Your Profile</h1>
+        <Link to="/" className="profile__home-link">
           Back to Home
         </Link>
+      </header>
+
+      <div className="profile__card">
+        <div className="profile__info">
+          <p className="profile__email">
+            <strong>Email:</strong> {profile?.email}
+          </p>
+          <p className="profile__roles">
+            <strong>Current Roles:</strong>{" "}
+            {profile?.roles?.length
+              ? profile.roles
+                  .map((r) => r.charAt(0).toUpperCase() + r.slice(1))
+                  .join(" & ")
+              : "None yet"}
+          </p>
+        </div>
+
+        {error && <div className="profile__error-msg">{error}</div>}
+
+        <form onSubmit={handleSubmit} className="profile__form">
+          <div className="profile__fields">
+            <input
+              name="firstName"
+              placeholder="First Name"
+              value={form.firstName}
+              onChange={handleChange}
+              className="profile__input"
+            />
+            <input
+              name="lastName"
+              placeholder="Last Name"
+              value={form.lastName}
+              onChange={handleChange}
+              className="profile__input"
+            />
+            <textarea
+              name="bio"
+              placeholder="Tell us about yourself and your love for dogs…"
+              value={form.bio}
+              onChange={handleChange}
+              rows={4}
+              className="profile__textarea"
+            />
+            <input
+              name="location"
+              placeholder="Your city or area"
+              value={form.location}
+              onChange={handleChange}
+              className="profile__input"
+            />
+            <input
+              name="dogBreed"
+              placeholder="Your dog's breed (if you're an owner)"
+              value={form.dogBreed}
+              onChange={handleChange}
+              className="profile__input"
+            />
+            <input
+              name="servicesOffered"
+              placeholder="Services you offer (if you're a sitter)"
+              value={form.servicesOffered}
+              onChange={handleChange}
+              className="profile__input"
+            />
+          </div>
+
+          <div className="profile__roles-section">
+            <h3 className="profile__roles-title">Your Role(s)</h3>
+            <p className="profile__roles-subtitle">
+              Select all that apply
+            </p>
+
+            <div className="profile__roles-list">
+              <label className="profile__role-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={form.roles.includes("owner")}
+                  onChange={() => toggleRole("owner")}
+                />
+                <span className="profile__role-custom-checkbox" />
+                <span className="profile__role-text">Dog Owner</span>
+              </label>
+
+              <label className="profile__role-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={form.roles.includes("sitter")}
+                  onChange={() => toggleRole("sitter")}
+                />
+                <span className="profile__role-custom-checkbox" />
+                <span className="profile__role-text">Dog Sitter</span>
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" disabled={saving} className="profile__submit">
+            {saving ? "Saving…" : "Save Profile"}
+          </button>
+        </form>
       </div>
-    </div>
+    </section>
   );
 }

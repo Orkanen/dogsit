@@ -100,6 +100,11 @@ export default function KennelDetail() {
           to request membership
         </div>
       )}
+    {isOwner && (
+      <Link to="/kennel/dashboard" className="kennel-profile__dashboard-link">
+        Go to Dashboard →
+      </Link>
+    )}
     </article>
   );
 }
