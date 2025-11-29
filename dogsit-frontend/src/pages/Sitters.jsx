@@ -85,9 +85,9 @@ export default function Sitters() {
                 className={`sitters__card ${alreadyMatched ? "sitters__card--matched" : ""}`}
               >
                 <div className="sitters__info">
-                  <Link to={`/profile/${s.id}`} className="sitters__name">
-                    {profile.firstName || "User"} {profile.lastName || ""}
-                  </Link>
+                <Link to={`/sitter/${s.id}`} className="sitters__name">
+                  {profile.firstName || "User"} {profile.lastName || ""}
+                </Link>
 
                   {profile.location && (
                     <p className="sitters__location">{profile.location}</p>

@@ -6,16 +6,34 @@ const router = express.Router();
 const prisma = new PrismaClient();
 
 /* --------------------------------------------------------------
-   GET /profile – user + profile + ALL roles
+   GET /profile
    -------------------------------------------------------------- */
 router.get("/", authenticateToken, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
-      include: {
-        profile: true,
+      select: {
+        id: true,
+        email: true,
+        profile: {
+          select: {
+            firstName: true,
+            lastName: true,
+            bio: true,
+            location: true,
+            dogBreed: true,
+            servicesOffered: true,
+            availability: true,
+            pricePerDay: true,
+            publicEmail: true,
+            publicPhone: true,
+            sitterDescription: true,
+          },
+        },
         roles: {
-          include: { role: true }
+          select: {
+            role: { select: { name: true } },
+          },
         },
       },
     });
@@ -28,19 +46,19 @@ router.get("/", authenticateToken, async (req, res) => {
       id: user.id,
       email: user.email,
       roles,
-      profile: user.profile ?? {},
+      profile: user.profile || {},
     });
   } catch (err) {
     console.error("GET /profile error:", err);
     res.status(500).json({ error: "Error retrieving profile" });
   }
 });
-
 /* --------------------------------------------------------------
-   POST /profile – update profile fields (unchanged)
+   POST /profile – upsert with all sitter fields
    -------------------------------------------------------------- */
 router.post("/", authenticateToken, async (req, res) => {
   const userId = req.user.id;
+
   const {
     firstName,
     lastName,
@@ -48,16 +66,43 @@ router.post("/", authenticateToken, async (req, res) => {
     location,
     dogBreed,
     servicesOffered,
+    availability = [],
+    pricePerDay,
+    publicEmail,
+    publicPhone,
+    sitterDescription,
   } = req.body;
 
   try {
-    const existing = await prisma.profile.findUnique({ where: { userId } });
-    if (!existing)
-      return res.status(404).json({ error: "Profile not found. Use registration flow." });
-
-    const profile = await prisma.profile.update({
+    const profile = await prisma.profile.upsert({
       where: { userId },
-      data: { firstName, lastName, bio, location, dogBreed, servicesOffered },
+      update: {
+        firstName: firstName ?? null,
+        lastName: lastName ?? null,
+        bio: bio ?? null,
+        location: location ?? null,
+        dogBreed: dogBreed ?? null,
+        servicesOffered: servicesOffered ?? null,
+        availability: Array.isArray(availability) ? availability : [],
+        pricePerDay: pricePerDay ? Number(pricePerDay) : null,
+        publicEmail: publicEmail ?? null,
+        publicPhone: publicPhone ?? null,
+        sitterDescription: sitterDescription ?? null,
+      },
+      create: {
+        userId,
+        firstName: firstName ?? null,
+        lastName: lastName ?? null,
+        bio: bio ?? null,
+        location: location ?? null,
+        dogBreed: dogBreed ?? null,
+        servicesOffered: servicesOffered ?? null,
+        availability: Array.isArray(availability) ? availability : [],
+        pricePerDay: pricePerDay ? Number(pricePerDay) : null,
+        publicEmail: publicEmail ?? null,
+        publicPhone: publicPhone ?? null,
+        sitterDescription: sitterDescription ?? null,
+      },
     });
 
     res.json(profile);

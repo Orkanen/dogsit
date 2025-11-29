@@ -1,0 +1,197 @@
+// src/styles/pages/_sitter-public.scss
+
+.sitter-public {
+    padding: 2rem 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .sitter-public__card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+  }
+  
+  .sitter-public__header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  
+  .sitter-public__name {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin: 0;
+  }
+  
+  .sitter-public__back {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    opacity: 0.9;
+    transition: opacity 0.2s;
+  
+    &:hover {
+      opacity: 1;
+    }
+  }
+  
+  .sitter-public__grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 3rem;
+    padding: 2.5rem;
+  
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+  }
+  
+  .sitter-public__main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.8rem;
+  }
+  
+  .sitter-public__location {
+    font-size: 1.1rem;
+    color: #555;
+    margin: 0;
+  }
+  
+  .sitter-public__description,
+  .sitter-public__services {
+    h3 {
+      margin: 0 0 0.75rem;
+      color: #2c3e50;
+      font-size: 1.3rem;
+    }
+    p {
+      margin: 0;
+      line-height: 1.7;
+      color: #444;
+    }
+  }
+  
+  .sitter-public__empty {
+    color: #888;
+    font-style: italic;
+  }
+  
+  .sitter-public__sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.8rem;
+  }
+  
+  .sitter-public__price {
+    font-size: 2.8rem;
+    font-weight: 800;
+    color: #27ae60;
+    text-align: center;
+    background: #f8fff9;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 3px solid #d5f5e3;
+  }
+  
+  .sitter-public__availability {
+    h4 {
+      margin: 0 0 0.75rem;
+      color: #2c3e50;
+    }
+  }
+  
+  .sitter-public__chips {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  
+  .chip {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-align: center;
+  }
+  
+  .chip--active {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+  }
+  
+  .chip--inactive {
+    background: #f8d7da;
+    color: #721c24;
+    opacity: 0.6;
+  }
+  
+  .sitter-public__contact {
+    background: #f8f9fa;
+    padding: 1.2rem;
+    border-radius: 10px;
+  
+    h4 {
+      margin: 0 0 0.75rem;
+      color: #2c3e50;
+    }
+  
+    p {
+      margin: 0.4rem 0;
+      font-family: monospace;
+      font-size: 1.05rem;
+    }
+  }
+  
+  .sitter-public__request-btn {
+    width: 100%;
+    padding: 1rem;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  
+    &:hover {
+      background: #218838;
+      transform: translateY(-2px);
+    }
+  
+    &:active {
+      transform: translateY(0);
+    }
+  }
+  
+  .sitter-public__login-cta {
+    display: block;
+    text-align: center;
+    margin-top: 1rem;
+    color: #007bff;
+    text-decoration: underline;
+    font-weight: 500;
+  
+    &:hover {
+      color: #0056b3;
+    }
+  }
+  
+  .sitter-public__loader,
+  .sitter-public__error {
+    text-align: center;
+    padding: 4rem;
+    font-size: 1.2rem;
+    color: #666;
+  }

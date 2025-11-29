@@ -90,6 +90,14 @@ model Profile {
   location        String?
   dogBreed        String?
   servicesOffered String?
+
+  // Sitter-specific fields
+  availability     Json?    @default("[]")           // stores ["MORNING","DAY"]
+  pricePerDay      Int?
+  publicEmail      String?
+  publicPhone      String?
+  sitterDescription String?
+
   user            User    @relation(fields: [userId], references: [id])
   userId          Int     @unique
 }

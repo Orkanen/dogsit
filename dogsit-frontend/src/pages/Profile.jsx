@@ -1,3 +1,4 @@
+// Profile.tsx
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import api from "../api/index";
@@ -17,8 +18,16 @@ export default function Profile() {
     location: "",
     dogBreed: "",
     servicesOffered: "",
+
+    availability: [],
+    pricePerDay: "",
+    publicEmail: "",
+    publicPhone: "",
+    sitterDescription: "",
+
     roles: [],
   });
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -39,9 +48,7 @@ export default function Profile() {
         const data = await api.getProfile();
         setProfile(data);
 
-        const editableRoles = data.roles?.filter((r) =>
-          ["owner", "sitter"].includes(r)
-        ) || [];
+        const currentRoles = data.roles || [];
 
         setForm({
           firstName: data.profile?.firstName || "",
@@ -50,7 +57,17 @@ export default function Profile() {
           location: data.profile?.location || "",
           dogBreed: data.profile?.dogBreed || "",
           servicesOffered: data.profile?.servicesOffered || "",
-          roles: editableRoles,
+
+          availability: Array.isArray(data.profile?.availability)
+            ? data.profile.availability
+            : [],
+
+          pricePerDay: data.profile?.pricePerDay || "",
+          publicEmail: data.profile?.publicEmail || "",
+          publicPhone: data.profile?.publicPhone || "",
+          sitterDescription: data.profile?.sitterDescription || "",
+
+          roles: currentRoles.filter(r => ["owner", "sitter"].includes(r)),
         });
       } catch (err) {
         setError(err.message || "Failed to load profile");
@@ -63,21 +80,34 @@ export default function Profile() {
     load();
   }, [id, user?.id, navigate]);
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const toggleRole = (role) => {
-    setForm((prev) => ({
+  const toggleRole = role => {
+    setForm(prev => ({
       ...prev,
       roles: prev.roles.includes(role)
-        ? prev.roles.filter((r) => r !== role)
+        ? prev.roles.filter(r => r !== role)
         : [...prev.roles, role],
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const toggleAvailability = period => {
+    if (!isSitter) return; // prevent changes when not sitter
+    setForm(prev => {
+      const current = prev.availability || [];
+      return {
+        ...prev,
+        availability: current.includes(period)
+          ? current.filter(p => p !== period)
+          : [...current, period],
+      };
+    });
+  };
+
+  const handleSubmit = async e => {
     e.preventDefault();
     setError("");
     setSaving(true);
@@ -90,6 +120,12 @@ export default function Profile() {
         location: form.location,
         dogBreed: form.dogBreed,
         servicesOffered: form.servicesOffered,
+
+        availability: isSitter ? form.availability : [],
+        pricePerDay: isSitter && form.pricePerDay ? Number(form.pricePerDay) : null,
+        publicEmail: isSitter ? form.publicEmail || null : null,
+        publicPhone: isSitter ? form.publicPhone || null : null,
+        sitterDescription: isSitter ? form.sitterDescription || null : null,
       });
 
       await api.updateUserRoles(form.roles);
@@ -102,34 +138,26 @@ export default function Profile() {
     }
   };
 
+  const isSitter = form.roles.includes("sitter");
+  const sitterFieldsDisabled = !isSitter;
+
   if (loading) return <div className="profile__loader">Loading your profile…</div>;
   if (error && !profile) return <div className="profile__error">{error}</div>;
-
-  const roles = [
-    { value: "owner", label: "Dog Owner", },
-    { value: "sitter", label: "Dog Sitter", },
-  ];
 
   return (
     <section className="profile">
       <header className="profile__header">
         <h1 className="profile__title">Your Profile</h1>
-        <Link to="/" className="profile__home-link">
-          Back to Home
-        </Link>
+        <Link to="/" className="profile__home-link">Back to Home</Link>
       </header>
 
       <div className="profile__card">
         <div className="profile__info">
-          <p className="profile__email">
-            <strong>Email:</strong> {profile?.email}
-          </p>
+          <p className="profile__email"><strong>Email (login):</strong> {profile?.email}</p>
           <p className="profile__roles">
             <strong>Current Roles:</strong>{" "}
             {profile?.roles?.length
-              ? profile.roles
-                  .map((r) => r.charAt(0).toUpperCase() + r.slice(1))
-                  .join(" & ")
+              ? profile.roles.map(r => r.charAt(0).toUpperCase() + r.slice(1)).join(" & ")
               : "None yet"}
           </p>
         </div>
@@ -138,78 +166,100 @@ export default function Profile() {
 
         <form onSubmit={handleSubmit} className="profile__form">
           <div className="profile__fields">
-            <input
-              name="firstName"
-              placeholder="First Name"
-              value={form.firstName}
-              onChange={handleChange}
-              className="profile__input"
-            />
-            <input
-              name="lastName"
-              placeholder="Last Name"
-              value={form.lastName}
-              onChange={handleChange}
-              className="profile__input"
-            />
-            <textarea
-              name="bio"
-              placeholder="Tell us about yourself and your love for dogs…"
-              value={form.bio}
-              onChange={handleChange}
-              rows={4}
-              className="profile__textarea"
-            />
-            <input
-              name="location"
-              placeholder="Your city or area"
-              value={form.location}
-              onChange={handleChange}
-              className="profile__input"
-            />
-            <input
-              name="dogBreed"
-              placeholder="Your dog's breed (if you're an owner)"
-              value={form.dogBreed}
-              onChange={handleChange}
-              className="profile__input"
-            />
-            <input
-              name="servicesOffered"
-              placeholder="Services you offer (if you're a sitter)"
-              value={form.servicesOffered}
-              onChange={handleChange}
-              className="profile__input"
-            />
+            <input name="firstName" placeholder="First Name" value={form.firstName} onChange={handleChange} className="profile__input" />
+            <input name="lastName" placeholder="Last Name" value={form.lastName} onChange={handleChange} className="profile__input" />
+            <textarea name="bio" placeholder="Tell us about yourself…" value={form.bio} onChange={handleChange} rows={4} className="profile__textarea" />
+            <input name="location" placeholder="City / Area" value={form.location} onChange={handleChange} className="profile__input" />
+            <input name="dogBreed" placeholder="Your dog's breed (owner)" value={form.dogBreed} onChange={handleChange} className="profile__input" />
+            <input name="servicesOffered" placeholder="Services you offer (sitter)" value={form.servicesOffered} onChange={handleChange} className="profile__input" />
           </div>
 
           <div className="profile__roles-section">
             <h3 className="profile__roles-title">Your Role(s)</h3>
-            <p className="profile__roles-subtitle">
-              Select all that apply
-            </p>
+            <p className="profile__roles-subtitle">Select all that apply</p>
 
             <div className="profile__roles-list">
               <label className="profile__role-checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={form.roles.includes("owner")}
-                  onChange={() => toggleRole("owner")}
-                />
+                <input type="checkbox" checked={form.roles.includes("owner")} onChange={() => toggleRole("owner")} />
                 <span className="profile__role-custom-checkbox" />
                 <span className="profile__role-text">Dog Owner</span>
               </label>
 
               <label className="profile__role-checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={form.roles.includes("sitter")}
-                  onChange={() => toggleRole("sitter")}
-                />
+                <input type="checkbox" checked={form.roles.includes("sitter")} onChange={() => toggleRole("sitter")} />
                 <span className="profile__role-custom-checkbox" />
                 <span className="profile__role-text">Dog Sitter</span>
               </label>
             </div>
+          </div>
+
+          {/* SITTER FIELDS — always visible, grayed out when not sitter */}
+          <div className={`profile__sitter-section ${sitterFieldsDisabled ? "profile__sitter-section--disabled" : ""}`}>
+            <h3 className="profile__sitter-title">Sitter Information (public)</h3>
+
+            <div className="profile__sitter-grid">
+              {/* Left column: Availability */}
+              <div className="profile__sitter-availability">
+                <p className="profile__label">Available times</p>
+                <div className="profile__availability-list">
+                  {["MORNING", "DAY", "NIGHT"].map(period => (
+                    <label key={period} className="profile__checkbox-label profile__checkbox-label--vertical">
+                      <input
+                        type="checkbox"
+                        checked={form.availability.includes(period)}
+                        onChange={() => toggleAvailability(period)}
+                        disabled={sitterFieldsDisabled}
+                      />
+                      <span className="profile__custom-checkbox"></span>
+                      <span>{period.charAt(0) + period.slice(1).toLowerCase()}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right column: Price, email, phone */}
+              <div className="profile__sitter-details">
+                <input
+                  name="pricePerDay"
+                  type="number"
+                  placeholder="Price per day (€)"
+                  value={form.pricePerDay}
+                  onChange={handleChange}
+                  disabled={sitterFieldsDisabled}
+                  className="profile__input"
+                />
+
+                <input
+                  name="publicEmail"
+                  type="email"
+                  placeholder="Public contact email (optional)"
+                  value={form.publicEmail}
+                  onChange={handleChange}
+                  disabled={sitterFieldsDisabled}
+                  className="profile__input"
+                />
+
+                <input
+                  name="publicPhone"
+                  placeholder="Public phone number (optional)"
+                  value={form.publicPhone}
+                  onChange={handleChange}
+                  disabled={sitterFieldsDisabled}
+                  className="profile__input"
+                />
+              </div>
+            </div>
+
+            {/* Full-width description below */}
+            <textarea
+              name="sitterDescription"
+              placeholder={sitterFieldsDisabled ? "Become a sitter to add a description" : "Describe your sitting style, house rules, experience…"}
+              value={form.sitterDescription}
+              onChange={handleChange}
+              rows={6}
+              disabled={sitterFieldsDisabled}
+              className="profile__textarea profile__textarea--full"
+            />
           </div>
 
           <button type="submit" disabled={saving} className="profile__submit">

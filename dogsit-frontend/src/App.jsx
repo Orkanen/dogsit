@@ -19,6 +19,7 @@ import KennelDashboard from "./pages/KennelDashboard";
 import KennelCreate from "./pages/KennelCreate";
 import KennelPetRequests from "./pages/KennelPetRequests";
 import MyPetProfile from "./pages/MyPetProfile";
+import SitterPublicProfile from "./pages/SitterPublicProfile";
 
 export default function App() {
   return (
@@ -31,13 +32,14 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/pets/:id" element={<PetProfile />} />
+        <Route path="/sitters" element={<Sitters />} /> 
+        <Route path="/sitter/:id" element={<SitterPublicProfile />} />
       </Route>
 
       {/* PROTECTED */}
       <Route element={<ProtectedLayout />}>
         <Route path="/profile/:id" element={<Profile />} />
         <Route path="/matches" element={<Matches />} />
-        <Route path="/sitters" element={<Sitters />} />
         <Route path="/chat" element={<ChatList />} />
         <Route path="/chat/:matchId" element={<Chat />} />
         <Route path="/pets/my" element={<MyPets />} />

@@ -37,6 +37,11 @@ CREATE TABLE `Profile` (
     `location` VARCHAR(191) NULL,
     `dogBreed` VARCHAR(191) NULL,
     `servicesOffered` VARCHAR(191) NULL,
+    `availability` JSON NULL,
+    `pricePerDay` INTEGER NULL,
+    `publicEmail` VARCHAR(191) NULL,
+    `publicPhone` VARCHAR(191) NULL,
+    `sitterDescription` VARCHAR(191) NULL,
     `userId` INTEGER NOT NULL,
 
     UNIQUE INDEX `Profile_userId_key`(`userId`),
@@ -194,6 +199,7 @@ CREATE TABLE `KennelMembershipRequest` (
     `status` ENUM('PENDING', 'ACCEPTED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
+    `type` VARCHAR(191) NOT NULL DEFAULT 'MEMBERSHIP',
 
     INDEX `KennelMembershipRequest_kennelId_idx`(`kennelId`),
     INDEX `KennelMembershipRequest_userId_idx`(`userId`),
@@ -210,6 +216,7 @@ CREATE TABLE `KennelPetRequest` (
     `status` ENUM('PENDING', 'ACCEPTED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
+    `type` VARCHAR(191) NOT NULL DEFAULT 'PET_LINK',
 
     INDEX `KennelPetRequest_kennelId_idx`(`kennelId`),
     INDEX `KennelPetRequest_petId_idx`(`petId`),

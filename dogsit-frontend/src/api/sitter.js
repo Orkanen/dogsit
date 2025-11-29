@@ -14,6 +14,13 @@ const sitterApi = {
     fetch(`${API_BASE}/sitters`, {
       headers: { "Content-Type": "application/json" }
     }).then(handleResponse),
+
+    getSitterById: (id) =>
+    fetch(`${API_BASE}/sitters/${id}`, {
+      headers: { "Content-Type": "application/json" },
+    }).then(handleResponse),
 }
+
+
 
 export default sitterApi

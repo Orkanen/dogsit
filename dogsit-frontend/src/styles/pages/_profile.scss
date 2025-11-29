@@ -122,6 +122,13 @@
       min-height: 120px;
       font-family: inherit;
     }
+
+    &__textarea--full {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      margin-top: 1.5rem;
+    }
   
     /* ——— Minimal & Professional Roles Section ——— */
     &__roles-section {
@@ -153,8 +160,9 @@
     &__role-checkbox-label {
       display: flex;
       align-items: center;
-      gap: 0.875rem;
+      gap: 0.6rem;
       cursor: pointer;
+      font-weight: 500;
       font-size: 1rem;
       color: #374151;
       user-select: none;
@@ -164,13 +172,17 @@
       &:hover {
         color: #1e293b;
       }
-  
+
       input {
         position: absolute;
         opacity: 0;
         width: 0;
         height: 0;
       }
+    }
+
+    &__checkbox-label--vertical {
+      align-items: center;
     }
   
     &__role-custom-checkbox {
@@ -204,9 +216,56 @@
     &__role-checkbox-label input:checked + &__role-custom-checkbox::after {
       transform: translate(-50%, -50%) scale(1);
     }
+
+    &__checkbox-group {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
   
     &__role-text {
       font-weight: 500;
+    }
+
+    &__availability {
+      margin-bottom: 1.5rem;
+    }
+
+    &__availability-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    &__sitter-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #92400e;
+    }
+
+    &__sitter-section--disabled {
+      opacity: 0.5;
+      pointer-events: none;
+      .profile__label, input, textarea {
+        cursor: not-allowed;
+      }
+    }
+
+    &__sitter-details {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    &__sitter-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+    
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+      }
     }
   
     /* ——— Submit Button ——— */
