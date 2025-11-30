@@ -247,4 +247,84 @@
         justify-content: center;
       }
     }
+
+    // KENNEL DASHBOARD — COURSES SECTION (NOW PERFECT)
+.kennel-dashboard__courses {
+  background: linear-gradient(135deg, #f0fdf4 0%, #f7fee7 100%);
+  border-radius: 24px;
+  padding: 2.5rem;
+  margin-bottom: 3rem;
+  border: 1px solid #bbf7d0;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #16a34a, #22c55e, #86efac);
+  }
+
+  h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #166534;
+    margin: 0 0 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    &::after {
+      content: '';
+      height: 4px;
+      flex: 1;
+      background: linear-gradient(90deg, #86efac, transparent);
+      border-radius: 2px;
+    }
+  }
+
+  .courses-list {
+    display: grid;
+    gap: 1.25rem;
+    margin-top: 2rem;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+
+  .course-item {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid #e8f0;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 16px 35px rgba(22, 163, 74, 0.15);
+      border-color: #16a34a;
+    }
+
+    strong {
+      font-size: 1.2rem;
+      color: #166534;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      color: #4b5563;
+      margin: 0.75rem 0;
+      line-height: 1.5;
+    }
+
+    small {
+      color: #16a34a;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+  }
+}
 }

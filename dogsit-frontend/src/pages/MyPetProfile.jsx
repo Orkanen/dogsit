@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import api from "@/api";
 import ConfirmModal from "@/components/ui/RevokeConfirmModal";
 import "@/styles/pages/_myPetProfile.scss";
+import CertificationRequest from "@/components/CertificationRequest";
 
 export default function MyPetProfile() {
   const { id } = useParams();
@@ -194,6 +195,9 @@ export default function MyPetProfile() {
         onConfirm={handleRemoveVerification}
         onCancel={() => setModalOpen(false)}
       />
+      {pet && (
+        <CertificationRequest petId={pet.id} petName={pet.name} />
+      )}
     </article>
   );
 }

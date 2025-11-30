@@ -10,34 +10,42 @@ const prisma = new PrismaClient();
    CREATE PET – owner only (no kennelId allowed)
    -------------------------------------------------------------- */
    router.post("/", authenticateToken, async (req, res) => {
-    const { name, species, breed, color, sex, age } = req.body;
-    const ownerId = req.user.id;
+    const userId = req.user.id;
+    let { kennelId, ...petData } = req.body;
   
-    if (!name?.trim() || !species || !sex) {
-      return res.status(400).json({ error: "Name, species, and sex are required" });
-    }
+    // Convert to number safely
+    kennelId = kennelId ? Number(kennelId) : null;
   
     try {
+      // CASE 1: User claims a kennel → check if they own it
+      if (kennelId) {
+        const membership = await prisma.kennelMember.findUnique({
+          where: {
+            kennelId_userId: { kennelId, userId },
+          },
+        });
+  
+        if (membership && membership.role === "OWNER") {
+          // USER OWNS THE KENNEL → auto-link, no request
+          petData.kennelId = kennelId;
+        } else {
+          // User does NOT own kennel → force kennelId = null, will send request later
+          petData.kennelId = null;
+        }
+      }
+  
+      // Always set owner
       const pet = await prisma.pet.create({
         data: {
-          name: name.trim(),
-          species,
-          breed: breed?.trim() || null,
-          color: color?.trim() || null,
-          sex,
-          age: age ? +age : null,
-          ownerId,
-          kennelId: null,
+          ...petData,
+          ownerId: userId,
+          age: petData.age ? Number(petData.age) : null,
         },
-        include: { owner: true, images: true },
       });
   
       res.status(201).json(pet);
     } catch (err) {
       console.error("Create pet error:", err);
-      if (err.code === "P2002") {
-        return res.status(409).json({ error: "Pet name already taken" });
-      }
       res.status(500).json({ error: "Failed to create pet" });
     }
   });
@@ -81,6 +89,10 @@ const prisma = new PrismaClient();
       const pet = await prisma.pet.findUnique({
         where: { id: petId },               // correct Prisma syntax
         include: {
+          certifications: {
+            where: { status: "APPROVED" },
+            include: { course: true }
+          },
           owner: { select: { id: true, email: true } },
           kennel: { select: { id: true, name: true } },
           images: true,
@@ -153,6 +165,31 @@ router.post("/:id/image", authenticateToken, canManagePet, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to attach image" });
+  }
+});
+
+router.post("/:petId/request-link", authenticateToken, async (req, res) => {
+  const { kennelId, message } = req.body;
+  const petId = Number(req.params.petId);
+  const userId = req.user.id;
+
+  try {
+    const pet = await prisma.pet.findUnique({ where: { id: petId } });
+    if (!pet || pet.ownerId !== userId) {
+      return res.status(403).json({ error: "Not your pet" });
+    }
+
+    await prisma.kennelPetRequest.create({
+      data: {
+        kennelId,
+        petId,
+        message: message || "Please verify this pet belongs to your kennel",
+      },
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to send request" });
   }
 });
 

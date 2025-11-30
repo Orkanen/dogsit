@@ -76,7 +76,7 @@ export default function Sitters() {
       ) : (
         <div className="sitters__grid">
           {sitters.map((s) => {
-            const profile = s.profile || {};
+            const profile = s || {};
             const alreadyMatched = isOwner && hasMatchWith(s.id);
 
             return (

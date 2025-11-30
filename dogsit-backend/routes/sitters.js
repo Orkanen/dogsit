@@ -5,49 +5,63 @@ const prisma = new PrismaClient();
 
 // SITTERS
 router.get("/", async (req, res) => {
+  const {
+    period,
+    service,
+    location,
+    maxPrice,
+  } = req.query;
+
   try {
-    const users = await prisma.user.findMany({
+    const sitters = await prisma.profile.findMany({
       where: {
-        roles: {
-          some: {
-            role: { name: "sitter" }
-          }
-        }
-      },
-      select: {
-        id: true,
-        email: true,
-        profile: {
-          select: {
-            firstName: true,
-            lastName: true,
-            location: true,
-            bio: true,
-            servicesOffered: true,
-            pricePerDay: true,
-            availability: true,
-            publicEmail: true,
-            publicPhone: true,
-            sitterDescription: true,
+        // ONLY users who have the "sitter" role
+        user: {
+          roles: {
+            some: {
+              role: {
+                name: "sitter"
+              }
+            }
           }
         },
-        roles: {
-          include: {
-            role: true
-          }
-        }
+        ...(period && {
+          availability: { some: { period } },
+        }),
+        ...(service && {
+          services: { some: { service: { name: service } } },
+        }),
+        ...(location && {
+          location: { contains: location, mode: "insensitive" },
+        }),
+        ...(maxPrice && {
+          pricePerDay: { lte: Number(maxPrice) },
+        }),
       },
-      orderBy: { profile: { firstName: "asc" } }
+      include: {
+        availability: true,
+        services: { include: { service: true } },
+        breedExperience: true,
+      },
+      orderBy: { firstName: "asc" },
     });
 
-    const sitters = users
-      .filter(u => u.roles.some(r => r.role.name === "sitter"))
-      .map(u => ({
-        id: u.id,
-        profile: u.profile || {}
-      }));
+    const formatted = sitters.map((p) => ({
+      id: p.userId,
+      firstName: p.firstName || "Sitter",
+      lastName: p.lastName || "",
+      location: p.location || "",
+      bio: p.bio || "",
+      pricePerDay: p.pricePerDay,
+      publicEmail: p.publicEmail,
+      publicPhone: p.publicPhone,
+      sitterDescription: p.sitterDescription || "",
+      services: p.services.map(s => s.service.name),
+      availability: p.availability.map(a => a.period),
+      breedExperience: p.breedExperience.map(b => b.breed),
+    }));
 
-    res.json(sitters);
+    res.json(formatted);
   } catch (err) {
     console.error("GET /sitters error:", err);
     res.status(500).json({ error: "Failed to fetch sitters" });
@@ -55,53 +69,52 @@ router.get("/", async (req, res) => {
 });
 
 router.get("/:id", async (req, res) => {
-  try {
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id) || id <= 0) {
-      return res.status(400).json({ message: "Invalid ID" });
-    }
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
 
-    const user = await prisma.user.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        profile: {
-          select: {
-            firstName: true,
-            lastName: true,
-            location: true,
-            bio: true,
-            servicesOffered: true,
-            pricePerDay: true,
-            availability: true,
-            publicEmail: true,
-            publicPhone: true,
-            sitterDescription: true,
+  try {
+    // INCLUDE THE USER + ROLES
+    const profile = await prisma.profile.findUnique({
+      where: { userId: id },
+      include: {
+        user: {
+          include: {
+            roles: {
+              include: { role: true }
+            }
           }
-        }
-      }
+        },
+        availability: true,
+        services: { include: { service: true } },
+        breedExperience: true,
+      },
     });
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    // NOW THIS IS SAFE
+    if (!profile) {
+      return res.status(404).json({ message: "Sitter not found" });
     }
 
-    const p = user.profile || {};
+    const hasSitterRole = profile.user?.roles?.some(r => r.role.name === "sitter");
 
+    if (!hasSitterRole) {
+      return res.status(404).json({ message: "Sitter not found" });
+    }
+
+    // Return flat structure (same as /sitters list)
     res.json({
-      id: user.id,
-      profile: {
-        firstName: p.firstName || "Sitter",
-        lastName: p.lastName || "",
-        location: p.location || "",
-        bio: p.bio || "",
-        servicesOffered: p.servicesOffered || "",
-        pricePerDay: p.pricePerDay ?? null,
-        availability: Array.isArray(p.availability) ? p.availability : [],
-        publicEmail: p.publicEmail ?? null,
-        publicPhone: p.publicPhone ?? null,
-        sitterDescription: p.sitterDescription || "",
-      }
+      id: profile.userId,
+      firstName: profile.firstName || "Sitter",
+      lastName: profile.lastName || "",
+      location: profile.location || "",
+      bio: profile.bio || "",
+      pricePerDay: profile.pricePerDay,
+      publicEmail: profile.publicEmail,
+      publicPhone: profile.publicPhone,
+      sitterDescription: profile.sitterDescription || "",
+      services: profile.services.map(s => s.service.name),
+      availability: profile.availability.map(a => a.period),
+      breedExperience: profile.breedExperience.map(b => b.breed),
     });
   } catch (err) {
     console.error("GET /sitters/:id error:", err);

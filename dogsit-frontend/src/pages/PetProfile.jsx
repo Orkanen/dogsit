@@ -114,6 +114,32 @@ export default function PetProfile() {
         </div>
       </section>
 
+      {/* CERTIFICATIONS SECTION */}
+      <section className="pet-profile__certifications">
+        <h3 className="pet-profile__section-title">Certifications</h3>
+
+        {pet.certifications?.length > 0 ? (
+          <div className="pet-profile__cert-list">
+            {pet.certifications
+              .filter(c => c.status === "APPROVED")
+              .map((cert) => (
+                <div key={cert.id} className="pet-profile__cert-badge">
+                  <span className="pet-profile__cert-icon">Certificate</span>
+                  <div>
+                    <strong>{cert.course.title}</strong>
+                    <p className="pet-profile__cert-issuer">
+                      Issued by {cert.issuingKennel?.name || cert.issuingClub?.name || "Unknown Issuer"}
+                      {cert.issuedAt && ` • ${new Date(cert.issuedAt).toLocaleDateString()}`}
+                    </p>
+                  </div>
+                </div>
+              ))}
+          </div>
+        ) : (
+          <p className="text-muted">No certifications yet</p>
+        )}
+      </section>
+
       <div className="pet-profile__footer">
         <Link to={backLink} className="pet-profile__back-link">
           {backText}

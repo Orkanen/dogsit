@@ -14,6 +14,8 @@ const chatRouter = require("./routes/chat");
 const sittersRouter = require("./routes/sitters");
 const petRouter = require("./routes/pet");
 const imageRouter = require("./routes/image");
+const certificationRouter = require("./routes/certifications");
+const coursesRouter = require("./routes/courses");
 
 const app = express();
 const server = http.createServer(app); // ← Use this instead of app
@@ -51,6 +53,8 @@ app.use("/message", chatRouter);
 app.use("/sitters", sittersRouter);
 app.use("/pets", petRouter);
 app.use("/images", imageRouter);
+app.use("/certifications", certificationRouter);
+app.use("/courses", coursesRouter);
 
 // === SOCKET.IO AUTH & CHAT LOGIC ===
 io.use(async (socket, next) => {

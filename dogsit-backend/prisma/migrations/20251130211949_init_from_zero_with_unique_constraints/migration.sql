@@ -35,9 +35,6 @@ CREATE TABLE `Profile` (
     `lastName` VARCHAR(191) NULL,
     `bio` VARCHAR(191) NULL,
     `location` VARCHAR(191) NULL,
-    `dogBreed` VARCHAR(191) NULL,
-    `servicesOffered` VARCHAR(191) NULL,
-    `availability` JSON NULL,
     `pricePerDay` INTEGER NULL,
     `publicEmail` VARCHAR(191) NULL,
     `publicPhone` VARCHAR(191) NULL,
@@ -224,6 +221,85 @@ CREATE TABLE `KennelPetRequest` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `SitterAvailability` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `userId` INTEGER NOT NULL,
+    `period` ENUM('MORNING', 'DAY', 'NIGHT') NOT NULL,
+
+    INDEX `SitterAvailability_period_idx`(`period`),
+    UNIQUE INDEX `SitterAvailability_userId_period_key`(`userId`, `period`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Service` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(191) NOT NULL,
+
+    UNIQUE INDEX `Service_name_key`(`name`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `SitterService` (
+    `userId` INTEGER NOT NULL,
+    `serviceId` INTEGER NOT NULL,
+
+    INDEX `SitterService_serviceId_idx`(`serviceId`),
+    PRIMARY KEY (`userId`, `serviceId`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `SitterBreedExperience` (
+    `userId` INTEGER NOT NULL,
+    `breed` VARCHAR(191) NOT NULL,
+
+    UNIQUE INDEX `SitterBreedExperience_userId_breed_key`(`userId`, `breed`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Course` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `title` VARCHAR(191) NOT NULL,
+    `description` VARCHAR(191) NULL,
+    `issuerType` VARCHAR(191) NOT NULL,
+    `kennelId` INTEGER NULL,
+    `clubId` INTEGER NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `Course_issuerType_idx`(`issuerType`),
+    INDEX `Course_kennelId_idx`(`kennelId`),
+    INDEX `Course_clubId_idx`(`clubId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Certification` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `courseId` INTEGER NOT NULL,
+    `userId` INTEGER NULL,
+    `petId` INTEGER NULL,
+    `issuingKennelId` INTEGER NULL,
+    `issuingClubId` INTEGER NULL,
+    `status` ENUM('PENDING', 'APPROVED', 'REJECTED', 'REVOKED') NOT NULL DEFAULT 'PENDING',
+    `certificateUrl` VARCHAR(500) NULL,
+    `issuedAt` DATETIME(3) NULL,
+    `revokedAt` DATETIME(3) NULL,
+    `notes` TEXT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    INDEX `Certification_courseId_idx`(`courseId`),
+    INDEX `Certification_userId_idx`(`userId`),
+    INDEX `Certification_petId_idx`(`petId`),
+    INDEX `Certification_issuingKennelId_idx`(`issuingKennelId`),
+    INDEX `Certification_issuingClubId_idx`(`issuingClubId`),
+    UNIQUE INDEX `Certification_courseId_petId_key`(`courseId`, `petId`),
+    UNIQUE INDEX `Certification_courseId_userId_key`(`courseId`, `userId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- AddForeignKey
 ALTER TABLE `UserRole` ADD CONSTRAINT `UserRole_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -316,3 +392,36 @@ ALTER TABLE `KennelPetRequest` ADD CONSTRAINT `KennelPetRequest_kennelId_fkey` F
 
 -- AddForeignKey
 ALTER TABLE `KennelPetRequest` ADD CONSTRAINT `KennelPetRequest_petId_fkey` FOREIGN KEY (`petId`) REFERENCES `Pet`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SitterAvailability` ADD CONSTRAINT `SitterAvailability_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `Profile`(`userId`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SitterService` ADD CONSTRAINT `SitterService_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `Profile`(`userId`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SitterService` ADD CONSTRAINT `SitterService_serviceId_fkey` FOREIGN KEY (`serviceId`) REFERENCES `Service`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SitterBreedExperience` ADD CONSTRAINT `SitterBreedExperience_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `Profile`(`userId`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Course` ADD CONSTRAINT `Course_kennelId_fkey` FOREIGN KEY (`kennelId`) REFERENCES `Kennel`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Course` ADD CONSTRAINT `Course_clubId_fkey` FOREIGN KEY (`clubId`) REFERENCES `Club`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Certification` ADD CONSTRAINT `Certification_courseId_fkey` FOREIGN KEY (`courseId`) REFERENCES `Course`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Certification` ADD CONSTRAINT `Certification_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Certification` ADD CONSTRAINT `Certification_petId_fkey` FOREIGN KEY (`petId`) REFERENCES `Pet`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Certification` ADD CONSTRAINT `Certification_issuingKennelId_fkey` FOREIGN KEY (`issuingKennelId`) REFERENCES `Kennel`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Certification` ADD CONSTRAINT `Certification_issuingClubId_fkey` FOREIGN KEY (`issuingClubId`) REFERENCES `Club`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;

@@ -104,7 +104,7 @@ export default function Matches() {
               <article key={m.id} className="matches__card">
                 <div className="matches__info">
                   <Link
-                    to={`/profile/${partner.id}`}
+                    to={`/sitter/${partner.id}`}
                     className="matches__name-link"
                   >
                     {profile.firstName || "User"} {profile.lastName || ""}

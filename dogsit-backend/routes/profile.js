@@ -21,32 +21,45 @@ router.get("/", authenticateToken, async (req, res) => {
             lastName: true,
             bio: true,
             location: true,
-            dogBreed: true,
-            servicesOffered: true,
-            availability: true,
             pricePerDay: true,
             publicEmail: true,
             publicPhone: true,
             sitterDescription: true,
+            availability: { select: { period: true } },
+            services: { select: { service: { select: { name: true } } } },
+            breedExperience: { select: { breed: true } },
+            user: { 
+              select: { 
+                certifications: { 
+                  where: { status: "APPROVED" },
+                  include: { course: true }
+                } 
+              } 
+            },
           },
         },
         roles: {
-          select: {
-            role: { select: { name: true } },
-          },
+          select: { role: { select: { name: true } } },
         },
       },
     });
 
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    const roles = user.roles.map((ur) => ur.role.name);
+    const roles = user.roles.map((r) => r.role.name);
+    const profile = user.profile || {};
 
     res.json({
       id: user.id,
       email: user.email,
       roles,
-      profile: user.profile || {},
+      profile: {
+        ...profile,
+        availability: profile.availability?.map((a) => a.period) || [],
+        services: profile.services?.map((s) => s.service.name) || [],
+        breedExperience: profile.breedExperience?.map((b) => b.breed) || [],
+        certifications: user.profile?.user?.certifications || [],
+      },
     });
   } catch (err) {
     console.error("GET /profile error:", err);
@@ -64,13 +77,13 @@ router.post("/", authenticateToken, async (req, res) => {
     lastName,
     bio,
     location,
-    dogBreed,
-    servicesOffered,
-    availability = [],
     pricePerDay,
     publicEmail,
     publicPhone,
     sitterDescription,
+    availability = [],        // array of strings: ["MORNING", "DAY"]
+    services = [],            // array of service names
+    breedExperience = [],     // array of breed strings
   } = req.body;
 
   try {
@@ -81,13 +94,24 @@ router.post("/", authenticateToken, async (req, res) => {
         lastName: lastName ?? null,
         bio: bio ?? null,
         location: location ?? null,
-        dogBreed: dogBreed ?? null,
-        servicesOffered: servicesOffered ?? null,
-        availability: Array.isArray(availability) ? availability : [],
         pricePerDay: pricePerDay ? Number(pricePerDay) : null,
         publicEmail: publicEmail ?? null,
         publicPhone: publicPhone ?? null,
         sitterDescription: sitterDescription ?? null,
+        availability: {
+          deleteMany: {},
+          create: availability.map((period) => ({ period })),
+        },
+        services: {
+          deleteMany: {},
+          create: services.map((name) => ({
+            service: { connectOrCreate: { where: { name }, create: { name } } },
+          })),
+        },
+        breedExperience: {
+          deleteMany: {},
+          create: breedExperience.map((breed) => ({ breed })),
+        },
       },
       create: {
         userId,
@@ -95,13 +119,26 @@ router.post("/", authenticateToken, async (req, res) => {
         lastName: lastName ?? null,
         bio: bio ?? null,
         location: location ?? null,
-        dogBreed: dogBreed ?? null,
-        servicesOffered: servicesOffered ?? null,
-        availability: Array.isArray(availability) ? availability : [],
         pricePerDay: pricePerDay ? Number(pricePerDay) : null,
         publicEmail: publicEmail ?? null,
         publicPhone: publicPhone ?? null,
         sitterDescription: sitterDescription ?? null,
+        availability: {
+          create: availability.map((period) => ({ period })),
+        },
+        services: {
+          create: services.map((name) => ({
+            service: { connectOrCreate: { where: { name }, create: { name } } },
+          })),
+        },
+        breedExperience: {
+          create: breedExperience.map((breed) => ({ breed })),
+        },
+      },
+      include: {
+        availability: true,
+        services: { include: { service: true } },
+        breedExperience: true,
       },
     });
 

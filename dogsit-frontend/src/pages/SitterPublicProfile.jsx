@@ -52,7 +52,7 @@ export default function SitterPublicProfile() {
   if (loading) return <div className="sitter-public__loader">Loading sitter…</div>;
   if (error) return <div className="sitter-public__error">{error}</div>;
 
-  const p = sitter.profile;
+  const p = sitter;
 
   return (
     <section className="sitter-public">

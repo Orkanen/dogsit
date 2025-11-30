@@ -165,4 +165,104 @@
         align-items: flex-start;
       }
     }
+
+    &__certifications {
+      margin-top: 2.5rem;
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e2e8f0;
+    }
+  
+    &__section-title {
+      font-size: 1.75rem;
+      color: #1e293b;
+      margin: 0 0 1.5rem;
+      font-weight: 700;
+      position: relative;
+      padding-bottom: 0 0 0.75rem;
+  
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(90deg, #f59e0b, #f97316);
+        border-radius: 2px;
+      }
+    }
+  
+    &__cert-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+  
+    &__cert-badge {
+      display: flex;
+      align-items: center;
+      gap:gap 1.25rem;
+      padding: 1.25rem;
+      background: linear-gradient(135deg, #fffbeb 0%, #fefce8 100%);
+      border-radius: 14px;
+      border: 2px solid #fde68a;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+  
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 6px;
+        height: 100%;
+        background: linear-gradient(to bottom, #f59e11, #f97316);
+      }
+  
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 15px 35px rgba(245, 158, 11, 0.25);
+        border-color: #f59e0b;
+      }
+    }
+  
+    &__cert-icon {
+      font-size: 3rem;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+    }
+  
+    &__cert-issuer {
+      margin: 0.35rem 0 0;
+      color: #64748b;
+      font-size: 0.95rem;
+    }
+  
+    // Badge styles (used in kennel verification)
+    .badge {
+      display: inline-block;
+      padding: 0.35rem 0.875rem;
+      border-radius: 9999px;
+      font-size: 0.825rem;
+      font-weight: 600;
+      margin-left: 0.75rem;
+  
+      &--verified {
+        background: #d1fae5;
+        color: #065f46;
+      }
+  
+      &--pending {
+        background: #fef3c7;
+        color: #92400e;
+      }
+  
+      &--rejected {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+    }
   }
