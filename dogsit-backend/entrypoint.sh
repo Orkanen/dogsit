@@ -4,11 +4,10 @@ set -e
 echo "Running: npx prisma generate"
 npx prisma generate
 
-# Extract DB_HOST from DATABASE_URL if not set
+# Wait for database
 DB_HOST="${DB_HOST:-$(echo "$DATABASE_URL" | sed -n 's|.*@\(.*\):.*|\1|p')}"
 DB_PORT="${DB_PORT:-3306}"
 
-# Wait for DB (max 30 seconds)
 max=30
 i=0
 echo "Waiting for ${DB_HOST}:${DB_PORT} (timeout ${max}s)..."
@@ -17,18 +16,13 @@ until nc -z "$DB_HOST" "$DB_PORT" 2>/dev/null || [ "$i" -ge "$max" ]; do
   printf '.'
   sleep 1
 done
+[ "$i" -lt "$max" ] && echo "\nok" || echo "\nTimeout, continuing..."
 
-if [ "$i" -ge "$max" ]; then
-  echo "\nTimeout reached waiting for DB (${DB_HOST}:${DB_PORT}), continuing anyway..."
-else
-  echo "\nok"
-fi
+echo "Applying schema changes safely (migrate if possible, push if not)"
+npx prisma migrate deploy || npx prisma db push
 
-echo "Syncing schema to database (bypassing broken migrations)"
-npx prisma db push --force-reset --skip-generate
-
-echo "Running seed script"
-node prisma/seed.js || echo "Seed script failed (continuing)"
+echo "Running seed script (idempotent — safe to run every time)"
+node prisma/seed.js || echo "Seed failed (continuing anyway)"
 
 echo "Starting Node.js app..."
 exec "$@"

@@ -1,67 +1,84 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import api from "../lib/api";
+import api from "../api/index";
+import { useAuth } from "../context/AuthContext";
+import "@/styles/pages/_chatList.scss";
 
 export default function ChatList() {
+  const { user } = useAuth();
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const load = async () => {
+    const loadChats = async () => {
       try {
         const matches = await api.getMatches();
-        const accepted = [...matches.sent, ...matches.received]
-          .filter(m => m.status === "ACCEPTED");
+        const accepted = [...matches.sent, ...matches.received].filter(
+          (m) => m.status === "ACCEPTED"
+        );
         setChats(accepted);
-      } catch (e) {
-        console.error(e);
+      } catch (err) {
+        console.error("Failed to load chats:", err);
       } finally {
         setLoading(false);
       }
     };
-    load();
+
+    loadChats();
   }, []);
 
-  if (loading) return <div style={{ padding: "2rem" }}>Loading chats...</div>;
+  const getPartner = (match) => {
+    return match.ownerId === user?.id ? match.sitter : match.owner;
+  };
+
+  if (loading) return <div className="chat-list__loader">Loading your chats…</div>;
 
   return (
-    <div style={{ padding: "1rem", maxWidth: "48rem", margin: "0 auto" }}>
-      <h2 style={{ marginBottom: "1rem" }}>Your Chats</h2>
+    <section className="chat-list">
+      <header className="chat-list__header">
+        <h1 className="chat-list__title">Your Chats</h1>
+        <Link to="/matches" className="chat-list__matches-link">
+          Go to Matches
+        </Link>
+      </header>
+
       {chats.length === 0 ? (
-        <p>No active chats. <Link to="/matches" style={{ color: "#1d4ed8" }}>Go to Matches</Link></p>
+        <div className="chat-list__empty">
+          <p>No active chats yet.</p>
+          <Link to="/matches" className="chat-list__cta">
+            Find someone to chat with
+          </Link>
+        </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          {chats.map(match => {
-            const partner = match.ownerId === JSON.parse(localStorage.getItem("user") || "{}").id
-              ? match.sitter
-              : match.owner;
+        <div className="chat-list__grid">
+          {chats.map((match) => {
+            const partner = getPartner(match);
+
             return (
               <Link
                 key={match.id}
                 to={`/chat/${match.id}`}
-                style={{
-                  padding: "1rem",
-                  background: "#f9fafb",
-                  borderRadius: "8px",
-                  textDecoration: "none",
-                  color: "inherit",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center"
-                }}
+                className="chat-list__item"
               >
-                <div>
-                  <strong>{partner.profile?.firstName || "User"}</strong>
-                  <p style={{ margin: "0.25rem 0", fontSize: "0.875rem", color: "#6b7280" }}>
-                    {partner.email}
-                  </p>
+                <div className="chat-list__partner">
+                  <div className="chat-list__avatar">
+                    {partner.profile?.firstName?.[0] || "U"}
+                  </div>
+                  <div className="chat-list__info">
+                    <h3 className="chat-list__name">
+                      {partner.profile?.firstName
+                        ? `${partner.profile.firstName} ${partner.profile.lastName || ""}`.trim()
+                        : "User"}
+                    </h3>
+                    <p className="chat-list__email">{partner.email}</p>
+                  </div>
                 </div>
-                <span style={{ fontSize: "1.5rem" }}>→</span>
+                <span className="chat-list__arrow">Right Arrow</span>
               </Link>
             );
           })}
         </div>
       )}
-    </div>
+    </section>
   );
 }

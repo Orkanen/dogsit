@@ -1,0 +1,330 @@
+.kennel-dashboard {
+    max-width: 1100px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+  
+    &__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 3rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+  
+    &__title {
+      font-size: 2.8rem;
+      font-weight: 800;
+      margin: 0;
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+  
+    &__home-link {
+      color: #16a34a;
+      font-weight: 600;
+      text-decoration: none;
+  
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  
+    &__section-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0 0 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  
+    &__count {
+      font-size: 1rem;
+      background: #dcfce7;
+      color: #16a34a;
+      padding: 0.25rem 0.75rem;
+      border-radius: 50px;
+      font-weight: 700;
+    }
+  
+    &__loader {
+      text-align: center;
+      padding: 4rem;
+      color: #64748b;
+      font-size: 1.1rem;
+    }
+  
+    &__empty {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: #f8fafc;
+      border-radius: 20px;
+      color: #64748b;
+  
+      p {
+        margin: 0.75rem 0;
+        font-size: 1.2rem;
+      }
+  
+      &-hint {
+        font-size: 1rem;
+        color: #94a3b8;
+        font-style: italic;
+      }
+    }
+  
+    &__create-link {
+      color: #16a34a;
+      font-weight: 600;
+      text-decoration: underline;
+    }
+  
+    /* My Kennels */
+    &__kennels-grid {
+      display: grid;
+      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+  
+    &__kennel-card {
+      background: white;
+      border-radius: 20px;
+      padding: 1.75rem;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+      transition: all 0.3s ease;
+  
+      &:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        border-color: #16a34a;
+      }
+    }
+  
+    &__kennel-name {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0 0 0.5rem;
+    }
+  
+    &__kennel-pets {
+      color: #64748b;
+      margin: 0.5rem 0;
+    }
+  
+    &__kennel-link {
+      color: #16a34a;
+      font-weight: 600;
+      text-decoration: none;
+      font-size: 0.95rem;
+  
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  
+    /* Requests */
+    &__requests-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+  
+    &__request {
+      background: white;
+      border-radius: 20px;
+      padding: 1.5rem;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+  
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.1);
+      }
+  
+      &--pet {
+        border-left: 5px solid #22c55e;
+      }
+  
+      &--member {
+        border-left: 5px solid #f59e0b;
+      }
+    }
+  
+    &__request-info {
+      flex: 1;
+    }
+  
+    &__request-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin: 0 0 0.5rem;
+    }
+  
+    &__request-subtitle {
+      color: #64748b;
+      font-size: 0.95rem;
+      margin: 0.5rem 0;
+    }
+  
+    &__pet-link {
+      color: #16a34a;
+      font-size: 0.9rem;
+      text-decoration: none;
+      font-weight: 500;
+  
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  
+    &__membership-tag {
+      background: #fef3c7;
+      color: #92400e;
+      padding: 0.25rem 0.75rem;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+  
+    &__request-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+  
+    &__btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+  
+      &--accept {
+        background: #16a34a;
+        color: white;
+  
+        &:hover {
+          background: #15803d;
+          transform: translateY(-3px);
+        }
+      }
+  
+      &--reject {
+        background: #dc2626;
+        color: white;
+  
+        &:hover {
+          background: #b91c1c;
+          transform: translateY(-3px);
+        }
+      }
+    }
+  
+    @media (max-width: 768px) {
+      &__title {
+        font-size: 2.4rem;
+      }
+  
+      &__request {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+        gap: 1rem;
+      }
+  
+      &__request-actions {
+        justify-content: center;
+      }
+    }
+
+    // KENNEL DASHBOARD — COURSES SECTION (NOW PERFECT)
+.kennel-dashboard__courses {
+  background: linear-gradient(135deg, #f0fdf4 0%, #f7fee7 100%);
+  border-radius: 24px;
+  padding: 2.5rem;
+  margin-bottom: 3rem;
+  border: 1px solid #bbf7d0;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #16a34a, #22c55e, #86efac);
+  }
+
+  h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #166534;
+    margin: 0 0 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    &::after {
+      content: '';
+      height: 4px;
+      flex: 1;
+      background: linear-gradient(90deg, #86efac, transparent);
+      border-radius: 2px;
+    }
+  }
+
+  .courses-list {
+    display: grid;
+    gap: 1.25rem;
+    margin-top: 2rem;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+
+  .course-item {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid #e8f0;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 16px 35px rgba(22, 163, 74, 0.15);
+      border-color: #16a34a;
+    }
+
+    strong {
+      font-size: 1.2rem;
+      color: #166534;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      color: #4b5563;
+      margin: 0.75rem 0;
+      line-height: 1.5;
+    }
+
+    small {
+      color: #16a34a;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+  }
+}
+}

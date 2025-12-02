@@ -28,7 +28,7 @@
   * `POST /pets` → owner-only, **no kennelId**  
   * Optional: `images[]` in create (via Cloudinary)  
 
-* [ ] **Frontend**  
+* [X] **Frontend**  
   * `/pets/new` → form with **image upload**  
   * Redirect to `/pets/:id` on success  
 
@@ -52,13 +52,13 @@
 
 ## 4. Kennel-Pet Linking System
 
-* [ ] **Backend**  
+* [X] **Backend**  
   * `POST /pets/:id/request-kennel` → owner requests link  
   * `GET /kennel/requests` → kennel sees pending  
   * `PATCH /kennel/requests/:reqId/accept` → link pet  
   * `PATCH /kennel/requests/:reqId/reject`  
 
-* [ ] **Frontend**  
+* [X] **Frontend**  
   * In pet profile: **"Request Kennel Link"** button  
   * Kennel dashboard: **Requests tab** → Accept/Reject  
   * On accept → pet shows **Kennel badge**  
@@ -174,4 +174,7 @@ We claim the right to terminate accounts that do not share our values or disrega
 
 Make introduction/guide for newly created clubs/kennels/owners/sitters, further explaining what the website provides and how to get started.
 As Admin Create Notification Banners, with link to more information and set time for duration.
-As Trainer, Kennel, Company, Advertisers be able to purchase the ability to create announcement Notification banners based on duration, time, geographical area,
+As Trainer, Kennel, Company, Advertisers be able to purchase the ability to create announcement Notification banners based on duration, time, geographical area, amount.
+Receipts should have unique identifier foil. (Stars, Circles, Squares, Triangles, Moons, Arrows..)*(Rotation)*(Colors)*(Direction of parallax).
+Reciepts should be able to be combined for easier monthly/yearly accounting.
+Chat's should be able to link/show direction (gps).

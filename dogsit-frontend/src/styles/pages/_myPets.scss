@@ -1,0 +1,124 @@
+.my-pets {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    min-height: 70vh;
+  
+    &__loader,
+    &__error,
+    &__message,
+    &__empty {
+      text-align: center;
+      padding: 4rem 2rem;
+      font-size: 1.125rem;
+      color: #555;
+    }
+  
+    &__error {
+      color: #e74c3c;
+      background: #fdf2f2;
+      border-radius: 8px;
+    }
+  
+    &__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+  
+    &__title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #2c3e50;
+    }
+  
+    &__add-btn {
+      background: #3498db;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+  
+      &:hover {
+        background: #2980b9;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+      }
+    }
+  
+    &__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+  
+    &__card {
+      display: block;
+      border-radius: 12px;
+      overflow: hidden;
+      background: white;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s ease;
+  
+      &:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.15);
+      }
+    }
+  
+    &__card-image {
+      position: relative;
+      height: 200px;
+      overflow: hidden;
+      background: #f8f9fa;
+  
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.4s ease;
+  
+        .my-pets__card:hover & {
+          transform: scale(1.05);
+        }
+      }
+    }
+  
+    &__placeholder {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #ecf0f1;
+      color: #95a5a6;
+      font-size: 1.1rem;
+    }
+  
+    &__card-content {
+      padding: 1.25rem;
+    }
+  
+    &__pet-name {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #2c3e50;
+      margin: 0 0 0.5rem;
+    }
+  
+    &__pet-info {
+      color: #7f8c8d;
+      font-size: 0.95rem;
+      margin: 0 0 0.5rem;
+    }
+  
+    &__kennel {
+      margin: 0;
+      font-size: 0.875rem;
+      color: #3498db;
+      font-weight: 500;
+    }
+  }

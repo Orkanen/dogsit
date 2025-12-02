@@ -1,0 +1,87 @@
+// src/styles/components/_courseForm.scss
+.course-form {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    margin: 1.5rem 0 2.5rem;
+    transition: all 0.3s ease;
+  
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.12);
+      border-color: #16a34a;
+    }
+  
+    // Grid layout so everything stays contained
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: 1fr;
+    max-width: 100%;
+    box-sizing: border-box;
+  
+    @media (min-width: 640px) {
+      grid-template-columns: 1fr 1fr;
+      align-items: end;
+  
+      // Make button full width on last row
+      > button {
+        grid-column: 1 / -1;
+      }
+    }
+  
+    select,
+    input,
+    textarea {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 14px;
+      font-size: 1rem;
+      background: #fcfcfc;
+      transition: all 0.3s ease;
+      box-sizing: border-box;
+  
+      &:focus {
+        outline: none;
+        border-color: #16a34a;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.15);
+      }
+  
+      &::placeholder {
+        color: #94a3b8;
+      }
+    }
+  
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+      grid-column: 1 / -1; // Full width on mobile
+    }
+  
+    button {
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+      color: white;
+      border: none;
+      padding: 0.975rem 2rem;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      justify-self: start;
+  
+      &:hover:not(:disabled) {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 28px rgba(22, 163, 74, 0.4);
+      }
+  
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+    }
+  }

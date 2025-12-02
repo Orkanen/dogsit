@@ -1,103 +1,158 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import api from "../lib/api";
-import { useAuth } from "../context/AuthContext";
+import { useLocation, useParams, Link } from "react-router-dom";
+import api from "@/api";
+import { useAuth } from "@/context/AuthContext";
+import "@/styles/pages/_petProfile.scss";
 
 export default function PetProfile() {
   const { id } = useParams();
   const { user } = useAuth();
   const [pet, setPet] = useState(null);
+  const [kennel, setKennel] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const location = useLocation();
+  const [verificationStatus, setVerificationStatus] = useState(null); // null | "PENDING" | "REJECTED"
+
+  const isOwner = user && pet?.ownerId === user.id;
 
   useEffect(() => {
     const fetchPet = async () => {
       try {
         const data = await api.getPet(id);
         setPet(data);
+
+        // Load kennel if officially verified
+        if (data.kennelId) {
+          const k = await api.getKennelById(data.kennelId);
+          setKennel(k);
+        }
+
+        // Only check for pending/rejected requests if owner
+        if (isOwner && !data.kennelId) {
+          const requests = await api.getMyOutgoingPetVerificationRequests();
+          const req = requests.find(r => r.pet.id === parseInt(id));
+          if (req) {
+            setVerificationStatus(req.status); // "PENDING" or "REJECTED"
+          }
+        }
       } catch (err) {
-        setError(err.message);
+        console.error("Failed to load pet:", err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchPet();
-  }, [id]);
+  }, [id, user]);
 
-  if (loading) return <div className="p-6 text-center">Loading pet...</div>;
-  if (error) return <div className="p-6 text-red-600 text-center">{error}</div>;
-  if (!pet) return <div className="p-6 text-center">Pet not found</div>;
+  if (loading) return <div className="pet-profile__loader">Loading…</div>;
+  if (!pet) return <div className="pet-profile__not-found">Pet not found</div>;
 
-  const canEdit = user && (pet.ownerId === user.id);
+  const hasOfficialKennel = !!pet.kennelId;
+
+  const from = location.state?.from;
+  const backLink = from === "kennel-requests" ? "/kennel/requests/pet" :
+                   from === "kennel-dashboard" ? "/kennel/dashboard" :
+                   "/pets/my";
+
+  const backText = from === "kennel-requests" ? "← Back to Verification Requests" :
+                   from === "kennel-dashboard" ? "← Back to Kennel Dashboard" :
+                   "← Back to My Pets";
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">{pet.name}</h1>
-          <p className="text-gray-600">
-            {pet.species} • {pet.breed || "—"} • {pet.age ? `${pet.age} yrs` : "—"}
+    <article className="pet-profile">
+      <header className="pet-profile__header">
+        <div className="pet-profile__info">
+          <h1 className="pet-profile__name">{pet.name || "Unnamed Pet"}</h1>
+          <p className="pet-profile__subtitle">
+            {pet.breed || "Unknown breed"} • {pet.age ? `${pet.age} years` : "Age unknown"}
           </p>
         </div>
-        {canEdit && (
-          <div className="flex gap-2">
-            <Link
-              to={`/pets/${pet.id}/edit`}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              Edit
-            </Link>
-            {/* delete button can be added later */}
-          </div>
+
+        {isOwner && (
+          <Link to={`/pets/${pet.id}/edit`} className="pet-profile__btn pet-profile__btn--edit">
+            Edit Pet
+          </Link>
+        )}
+      </header>
+
+      <div className="pet-profile__hero">
+        {pet.images?.[0]?.url ? (
+          <img src={pet.images[0].url} alt={pet.name} className="pet-profile__image" />
+        ) : (
+          <div className="pet-profile__placeholder">No photo</div>
         )}
       </div>
 
-      {/* Main image */}
-      {pet.images?.[0] ? (
-        <img
-          src={pet.images[0].url}
-          alt={pet.name}
-          className="w-full h-80 object-cover rounded-lg shadow mb-6"
+      <section className="pet-profile__details">
+        <InfoItem label="Sex" value={pet.sex} />
+        <InfoItem label="Color" value={pet.color} />
+        <InfoItem
+          label="Owner"
+          value={
+            pet.owner?.profile?.firstName
+              ? `${pet.owner.profile.firstName} ${pet.owner.profile.lastName || ""}`.trim()
+              : pet.owner?.email || "Unknown"
+          }
         />
-      ) : (
-        <div className="bg-gray-200 border-2 border-dashed rounded-xl w-full h-80 flex items-center justify-center mb-6">
-          No photo
+
+        {/* VERIFIED KENNEL BADGE */}
+        <div className="pet-profile__kennel-status">
+          <strong>Kennel of Origin:</strong>{" "}
+          {hasOfficialKennel ? (
+            <Link to={`/kennel/${kennel.id}`} className="pet-profile__kennel-link">
+              {kennel.name} ({kennel.location || "Location unknown"})
+              <span className="badge badge--verified">Officially Verified</span>
+            </Link>
+          ) : verificationStatus === "PENDING" ? (
+            <span className="badge badge--pending">Verification Request Pending</span>
+          ) : verificationStatus === "REJECTED" ? (
+            <span className="badge badge--rejected">Verification Request Rejected</span>
+          ) : (
+            <span className="text-muted">Not registered with any kennel</span>
+          )}
         </div>
-      )}
+      </section>
 
-      {/* Info grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded">
-        <Info label="Color" value={pet.color || "—"} />
-        <Info label="Sex" value={pet.sex || "—"} />
-        <Info label="Owner" value={pet.owner?.email || "—"} />
-        <Info label="Kennel" value={pet.kennel?.name || "—"} />
-      </div>
+      {/* CERTIFICATIONS SECTION */}
+      <section className="pet-profile__certifications">
+        <h3 className="pet-profile__section-title">Certifications</h3>
 
-      {/* Back link */}
-      <div className="mt-8">
-        <Link to="/pets/my" className="text-blue-600 hover:underline">
-          ← Back to My Pets
+        {pet.certifications?.length > 0 ? (
+          <div className="pet-profile__cert-list">
+            {pet.certifications
+              .filter(c => c.status === "APPROVED")
+              .map((cert) => (
+                <div key={cert.id} className="pet-profile__cert-badge">
+                  <span className="pet-profile__cert-icon">Certificate</span>
+                  <div>
+                    <strong>{cert.course.title}</strong>
+                    <p className="pet-profile__cert-issuer">
+                      Issued by {cert.issuingKennel?.name || cert.issuingClub?.name || "Unknown Issuer"}
+                      {cert.issuedAt && ` • ${new Date(cert.issuedAt).toLocaleDateString()}`}
+                    </p>
+                  </div>
+                </div>
+              ))}
+          </div>
+        ) : (
+          <p className="text-muted">No certifications yet</p>
+        )}
+      </section>
+
+      <div className="pet-profile__footer">
+        <Link to={backLink} className="pet-profile__back-link">
+          {backText}
         </Link>
       </div>
-
-      {canEdit && (
-        <Link
-          to={`/pets/${pet.id}/edit`}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-        >
-          Edit Pet
-        </Link>
-      )}
-    </div>
+    </article>
   );
 }
 
-function Info({ label, value }) {
+function InfoItem({ label, value }) {
   return (
-    <div>
-      <strong className="text-gray-700">{label}:</strong>{" "}
-      <span className="text-gray-900">{value}</span>
+    <div className="pet-profile__info-item">
+      <strong>{label}:</strong> <span>{value || "—"}</span>
     </div>
   );
 }

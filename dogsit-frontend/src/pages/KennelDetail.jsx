@@ -1,90 +1,110 @@
 import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import api from "../lib/api";
+import { useParams, Link } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import "@/styles/pages/_kennel-detail.scss";
+import api from "@/api";
+
 
 export default function KennelDetail() {
   const { id } = useParams();
-  const navigate = useNavigate();
+  const { user } = useAuth();
+
   const [kennel, setKennel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
   const [isMember, setIsMember] = useState(false);
 
   useEffect(() => {
-    const load = async () => {
+    const loadKennel = async () => {
       try {
-        const [allKennels, myKennels] = await Promise.all([
-          api.getKennels(),
-          api.getMyKennels()
-        ]);
-        const found = allKennels.find(k => k.id === parseInt(id));
-        if (!found) return setLoading(false);
+        // 1. Public data — this must always succeed
+        const publicKennel = await api.getKennelById(id);
+        setKennel(publicKennel);
 
-        setKennel(found);
-        const myKennel = myKennels.find(k => k.id === found.id);
-        if (myKennel) {
-          setIsOwner(myKennel.myRole === "OWNER");
-          setIsMember(true);
+        // 2. If logged in → silently check membership (401/403 = normal, not an error)
+        if (user) {
+          const myKennels = await api.getMyKennels(); // ← returns [] on auth issues (perfect)
+          const membership = myKennels.find(k => k.id === parseInt(id));
+
+          if (membership) {
+            setIsMember(true);
+            setIsOwner(membership.myRole === "OWNER");
+          }
+          // No else → being non-member is NOT an error → stay silent
         }
       } catch (err) {
-        console.error(err);
+        // Only real errors reach here: network down, 500, malformed response
+        console.error("[KennelDetail] Failed to load kennel:", err);
       } finally {
         setLoading(false);
       }
     };
-    load();
-  }, [id]);
 
-  const handleRequest = async () => {
-    if (confirm("Send membership request?")) {
-      await api.requestKennelMembership(id, "I'd love to join your kennel!");
-      alert("Request sent!");
-      navigate("/kennel/dashboard");
-    }
-  };
+    loadKennel();
+  }, [id, user]);
 
-  if (loading) return <div>Loading...</div>;
-  if (!kennel) return <div>Kennel not found</div>;
+  if (loading) {
+    return <div className="kennel-detail__loading">Loading kennel...</div>;
+  }
+
+  if (!kennel) {
+    return (
+      <div className="kennel-detail__error">
+        <p>Kennel not found</p>
+        <Link to="/kennel" className="kennel-detail__back">← Back to All Kennels</Link>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ maxWidth: "64rem", margin: "2rem auto", padding: "2rem" }}>
-      <Link to="/kennel" style={{ color: "#1d4ed8", textDecoration: "underline" }}>
+    <article className="kennel-detail">
+      <Link to="/kennel" className="kennel-detail__back">
         ← All Kennels
       </Link>
 
-      <h1 style={{ fontSize: "2.5rem", fontWeight: "bold", margin: "2rem 0" }}>
-        {kennel.name}
-      </h1>
-      <p style={{ color: "#6b7280" }}>{kennel.location || "No location set"}</p>
+      <header className="kennel-detail__header">
+        <h1 className="kennel-detail__name">{kennel.name}</h1>
+        <p className="kennel-detail__location">
+          {kennel.location || "Location not set"}
+        </p>
+      </header>
 
-      <div style={{ margin: "1.5rem 0", fontSize: "1.125rem" }}>
-        <strong>{kennel.memberCount || 0}</strong> Members •{" "}
-        <strong>{kennel.dogCount || 0}</strong> Dogs
+      <div className="kennel-detail__stats">
+        <span>
+          <strong>{kennel.memberCount}</strong> Members
+        </span>
+        <span>
+          <strong>{kennel.dogCount}</strong> Dogs
+        </span>
       </div>
 
-      {isOwner && (
-        <div style={{ padding: "1rem", background: "#f0fdf4", borderRadius: "0.5rem", margin: "1rem 0" }}>
-          You are the OWNER of this kennel
-        </div>
-      )}
+      {/* Owner / Member badges */}
+      {isOwner && <div className="kennel-detail__badge owner">You are the Owner</div>}
+      {isMember && !isOwner && <div className="kennel-detail__badge member">You are a Member</div>}
 
-      {!isMember && !isOwner && (
+      {/* Action buttons */}
+      {!isMember && user && (
         <button
-          onClick={handleRequest}
-          style={{
-            padding: "0.75rem 1.5rem",
-            background: "#1f2937",
-            color: "white",
-            border: "none",
-            borderRadius: "0.5rem",
-            fontWeight: "600",
-            cursor: "pointer",
-            marginTop: "1rem"
-          }}
+          onClick={() => api.requestKennelMembership(id)}
+          className="kennel-detail__join-btn"
         >
           Request to Join Kennel
         </button>
       )}
-    </div>
+
+      {!user && (
+        <div className="kennel-detail__login-prompt">
+          <Link to="/login" className="kennel-detail__login-link">
+            Log in
+          </Link>{" "}
+          to request membership
+        </div>
+      )}
+    {isOwner && (
+      <Link to="/kennel/dashboard" className="kennel-profile__dashboard-link">
+        Go to Dashboard →
+      </Link>
+    )}
+    </article>
   );
 }

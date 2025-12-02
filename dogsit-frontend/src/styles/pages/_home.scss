@@ -1,0 +1,52 @@
+@use "@/styles/abstracts/variables" as *;
+
+.home-page {
+  padding: $spacing-8;
+  text-align: center;
+  font-family: $font-family;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+
+  &__title {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: $spacing-4;
+    background: linear-gradient(90deg, #1e40af, #3b82f6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  &__subtitle {
+    font-size: 1.25rem;
+    color: $text;
+    margin-bottom: $spacing-8;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+  }
+
+  &__actions {
+    display: flex;
+    gap: $spacing-8;
+    justify-content: center;
+    flex-wrap: wrap;
+
+    a {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: $primary;
+      text-decoration: underline;
+      transition: all 0.2s ease;
+
+      &:hover {
+        color: #1e40af;
+        transform: translateY(-2px);
+      }
+    }
+  }
+}

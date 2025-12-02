@@ -1,0 +1,87 @@
+@use "./_petProfile" as pet;
+
+.my-pet-profile {
+  @extend .pet-profile !optional;
+
+  &__verification {
+    grid-column: 1 / -1;
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    margin-top: 1rem;
+
+    .verified,
+    .not-verified {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .kennel-link {
+      color: #2563eb;
+      font-weight: 600;
+      text-decoration: none;
+      &:hover { text-decoration: underline; }
+    }
+
+    .btn--small {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+    }
+  }
+
+  &__actions {
+    margin-top: 2rem;
+  }
+
+  .back-link {
+    @extend .pet-profile__back-link;
+  }
+  
+  .dropdown {
+    position: relative;
+    display: inline-block;
+  
+    &__toggle {
+      white-space: nowrap;
+    }
+  
+    &__menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      margin-top: 0.5rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      z-index: 10;
+      overflow: hidden;
+    }
+  
+    &__item {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      text-align: left;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: background 0.2s;
+  
+      &:hover {
+        background: #f8f9fa;
+      }
+    }
+  
+    &__empty {
+      padding: 1rem;
+      text-align: center;
+      color: #888;
+      font-size: 0.9rem;
+    }
+  }
+}

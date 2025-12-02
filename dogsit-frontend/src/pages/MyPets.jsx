@@ -1,8 +1,8 @@
-// src/pages/MyPets.jsx
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import api from "../lib/api";
+import api from "../api/index";
+import "@/styles/pages/_myPets.scss";
 
 export default function MyPets() {
   const { user, loading: authLoading } = useAuth();
@@ -18,67 +18,91 @@ export default function MyPets() {
         const data = await api.getMyPets();
         setPets(data);
       } catch (err) {
-        setError(err.message);
+        setError(err.message || "Failed to load pets");
       } finally {
         setLoading(false);
       }
     };
+
     fetchPets();
   }, [user]);
 
-  if (authLoading) return <div className="p-6">Loading…</div>;
-  if (!user) return <div className="p-6">Please log in.</div>;
-  if (loading) return <div className="p-6">Loading your pets…</div>;
-  if (error) return <div className="p-6 text-red-600">{error}</div>;
+  if (authLoading || loading) {
+    return <div className="my-pets__loader">Loading your pets…</div>;
+  }
+  if (!user) {
+    return <div className="my-pets__message">Please log in to see your pets.</div>;
+  }
+  if (error) {
+    return <div className="my-pets__error">{error}</div>;
+  }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">My Pets</h1>
-        <Link
-          to="/pets/new"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
+    <section className="my-pets">
+      <header className="my-pets__header">
+        <h1 className="my-pets__title">My Pets</h1>
+        <Link to="/pets/new" className="my-pets__add-btn">
           + Add Pet
         </Link>
-      </div>
+      </header>
 
       {pets.length === 0 ? (
-        <p className="text-gray-600">You don't have any pets yet.</p>
+        <div className="my-pets__empty-state">
+          <p>You don't have any pets yet.</p>
+          <Link to="/pets/new" className="btn btn--primary">
+            Add Your First Pet
+          </Link>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="my-pets__grid">
           {pets.map((pet) => (
             <Link
               key={pet.id}
-              to={`/pets/${pet.id}`}
-              className="border rounded-lg overflow-hidden shadow hover:shadow-lg transition"
+              to={`/my-pets/${pet.id}`}               // Secure private profile
+              className="my-pets__card"
             >
-              {pet.images?.[0] ? (
-                <img
-                  src={pet.images[0].url}
-                  alt={pet.name}
-                  className="w-full h-48 object-cover"
-                />
-              ) : (
-                <div className="bg-gray-200 h-48 flex items-center justify-center">
-                  <span className="text-gray-500">No photo</span>
-                </div>
-              )}
-              <div className="p-4">
-                <h3 className="font-semibold text-lg">{pet.name}</h3>
-                <p className="text-sm text-gray-600">
-                  {pet.species} • {pet.breed || "—"}
+              <div className="my-pets__card-image">
+                {pet.images?.[0]?.url ? (
+                  <img
+                    src={pet.images[0].url}
+                    alt={pet.name}
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="my-pets__placeholder">
+                    <span>No photo</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="my-pets__card-content">
+                <h3 className="my-pets__pet-name">{pet.name}</h3>
+
+                <p className="my-pets__pet-info">
+                  {pet.breed || "Unknown breed"} • {pet.sex}{" "}
+                  {pet.age ? `• ${pet.age} yo` : "• Age unknown"}
                 </p>
-                {pet.kennel && (
-                  <p className="text-xs text-blue-600 mt-1">
-                    Kennel: {pet.kennel.name}
-                  </p>
+
+                {/* Verification badge */}
+                {pet.kennel ? (
+                  <div className="my-pets__kennel-badge">
+                    <span className="badge badge--success">Verified</span>
+                    <span className="my-pets__kennel-name">
+                      {pet.kennel.name}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="my-pets__kennel-badge">
+                    <span className="badge badge--outline">
+                      Not verified
+                    </span>
+                  </div>
                 )}
               </div>
             </Link>
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
 }

@@ -1,0 +1,302 @@
+.profile {
+    max-width: 680px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+  
+    &__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+  
+    &__title {
+      font-size: 2.8rem;
+      font-weight: 800;
+      margin: 0;
+      background: linear-gradient(135deg, #f59e0b, #f97316);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+  
+    &__home-link {
+      color: #f59e0b;
+      font-weight: 600;
+      text-decoration: none;
+      font-size: 1.05rem;
+  
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  
+    &__loader,
+    &__error {
+      text-align: center;
+      padding: 6rem 2rem;
+      font-size: 1.3rem;
+      color: #64748b;
+    }
+  
+    &__error {
+      color: #dc2626;
+      background: #fee2e2;
+      border-radius: 20px;
+      padding: 2rem;
+    }
+  
+    &__card {
+      background: white;
+      border-radius: 24px;
+      padding: 2.5rem;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+      border: 1px solid #f1f5f9;
+    }
+  
+    &__info {
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 2px dashed #e2e8f0;
+    }
+  
+    &__email,
+    &__roles {
+      font-size: 1.1rem;
+      color: #4b5563;
+      margin: 0.75rem 0;
+  
+      strong {
+        color: #1e293b;
+        font-weight: 700;
+      }
+    }
+  
+    &__error-msg {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 1rem 1.5rem;
+      border-radius: 16px;
+      margin-bottom: 2rem;
+      font-weight: 500;
+      border: 1px solid #fecaca;
+    }
+  
+    &__form {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+  
+    &__fields {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+  
+    &__input,
+    &__textarea {
+      padding: 1rem 1.25rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 16px;
+      font-size: 1.05rem;
+      background: #f8fafc;
+      transition: all 0.3s ease;
+  
+      &:focus {
+        outline: none;
+        border-color: #f59e0b;
+        background: white;
+        box-shadow: 0 0 0 5px rgba(245, 158, 11, 0.2);
+      }
+  
+      &::placeholder {
+        color: #94a3b8;
+      }
+    }
+  
+    &__textarea {
+      resize: vertical;
+      min-height: 120px;
+      font-family: inherit;
+    }
+
+    &__textarea--full {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      margin-top: 1.5rem;
+    }
+  
+    /* ——— Minimal & Professional Roles Section ——— */
+    &__roles-section {
+      margin: 2rem 0;
+      padding: 1.75rem 0;
+      border-top: 1px solid #e2e8f0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+  
+    &__roles-title {
+      margin: 0 0 0.5rem;
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #1e293b;
+    }
+  
+    &__roles-subtitle {
+      margin: 0 0 1.5rem;
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+  
+    &__roles-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+  
+    &__role-checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 1rem;
+      color: #374151;
+      user-select: none;
+      padding: 0.25rem 0;
+      transition: color 0.2s ease;
+  
+      &:hover {
+        color: #1e293b;
+      }
+
+      input {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+    }
+
+    &__checkbox-label--vertical {
+      align-items: center;
+    }
+  
+    &__role-custom-checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #94a3b8;
+      border-radius: 6px;
+      background: white;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+      position: relative;
+    }
+  
+    &__role-checkbox-label input:checked + &__role-custom-checkbox {
+      background: #f59e0b;
+      border-color: #f59e0b;
+    }
+  
+    &__role-custom-checkbox::after {
+      content: "Check";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      color: white;
+      font-weight: bold;
+      font-size: 12px;
+      transition: transform 0.2s ease;
+    }
+  
+    &__role-checkbox-label input:checked + &__role-custom-checkbox::after {
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    &__checkbox-group {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+  
+    &__role-text {
+      font-weight: 500;
+    }
+
+    &__availability {
+      margin-bottom: 1.5rem;
+    }
+
+    &__availability-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    &__sitter-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #92400e;
+    }
+
+    &__sitter-section--disabled {
+      opacity: 0.5;
+      pointer-events: none;
+      .profile__label, input, textarea {
+        cursor: not-allowed;
+      }
+    }
+
+    &__sitter-details {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    &__sitter-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+    
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+      }
+    }
+  
+    /* ——— Submit Button ——— */
+    &__submit {
+      margin-top: 1rem;
+      padding: 1.25rem;
+      background: linear-gradient(135deg, #f59e0b, #f97316);
+      color: white;
+      border: none;
+      border-radius: 20px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3);
+  
+      &:hover:not(:disabled) {
+        transform: translateY(-6px);
+        box-shadow: 0 20px 50px rgba(245, 158, 11, 0.4);
+      }
+  
+      &:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+    }
+  
+    /* ——— Responsive ——— */
+    @media (max-width: 640px) {
+      &__title {
+        font-size: 2.4rem;
+      }
+    }
+}
