@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import api from "../api/index";
+import api from "@/api";
 import "@/styles/pages/_matches.scss";
 
 export default function Matches() {
@@ -12,7 +12,7 @@ export default function Matches() {
   const load = async () => {
     try {
       setLoading(true);
-      const res = await api.getMatches();
+      const res = await api.match.getMatches();
       setData(res);
     } catch (e) {
       setError(e.message || "Failed to load matches");
@@ -27,7 +27,7 @@ export default function Matches() {
 
   const handleAccept = async (id) => {
     try {
-      await api.acceptMatch(id);
+      await api.match.acceptMatch(id);
       load();
     } catch {
       alert("Failed to accept match");
@@ -36,7 +36,7 @@ export default function Matches() {
 
   const handleReject = async (id) => {
     try {
-      await api.rejectMatch(id);
+      await api.match.rejectMatch(id);
       load();
     } catch {
       alert("Failed to reject match");
@@ -45,7 +45,7 @@ export default function Matches() {
 
   const handleCancel = async (id) => {
     try {
-      await api.cancelMatch(id);
+      await api.match.cancelMatch(id);
       load();
     } catch {
       alert("Failed to cancel match");

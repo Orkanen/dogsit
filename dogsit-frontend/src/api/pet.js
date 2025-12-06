@@ -1,63 +1,29 @@
-const API_BASE = import.meta.env.VITE_API_BASE
-
-const handleResponse = async (res) => {
-    const data = await res.json()
-    if (!res.ok) {
-        throw new Error(data.error || data.message || 'Request failed')
-    }
-    return data
-}
-
-const getAuthHeaders = () => ({
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${localStorage.getItem('token')}`,
-})
+import fetchPublic from "./fetchPublic";
+import fetchWithAuth from "./fetchWithAuth";
 
 const petApi = {
-    // === PETS ===
-    createPet: (petData) =>
-    fetch(`${API_BASE}/pets`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(petData),
-    }).then(handleResponse),
+  // PUBLIC
+  getPetById: (id) => fetchPublic(`/pet/${id}`),
 
-    getPet: (petId) =>
-    fetch(`${API_BASE}/pets/${petId}`, {
-        headers: getAuthHeaders(),
-    }).then(handleResponse),
+  // PROTECTED
+  getMyPets: async () => {
+    const res = await fetchWithAuth("/pet/my");
+    return res; // or res.pets if you wrap it
+  },
 
-    getMyPets: () =>
-    fetch(`${API_BASE}/pets/my`, {
-        headers: getAuthHeaders(),
-    }).then(handleResponse),
+  createPet: (data) =>
+    fetchWithAuth("/pet", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 
-    getPet: (petId) =>
-    fetch(`${API_BASE}/pets/${petId}`, {
-        headers: getAuthHeaders(),
-    }).then(handleResponse),
+  updatePet: (id, data) =>
+    fetchWithAuth(`/pet/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
 
-    updatePet: (petId, petData) =>
-    fetch(`${API_BASE}/pets/${petId}`, {
-      method: "PUT",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(petData),
-    }).then(handleResponse),
+  deletePet: (id) => fetchWithAuth(`/pet/${id}`, { method: "DELETE" }),
+};
 
-    deletePet: (petId) =>
-    fetch(`${API_BASE}/pets/${petId}`, {
-        method: "DELETE",
-        headers: getAuthHeaders(),
-    }).then(handleResponse),
-
-    // Attach image to pet
-    attachImageToPet: (petId, imageId) =>
-    fetch(`${API_BASE}/pets/${petId}/image`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ imageId }),
-    }).then(handleResponse),
-
-}
-
-export default petApi
+export default petApi;

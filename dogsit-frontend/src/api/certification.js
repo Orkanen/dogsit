@@ -1,51 +1,34 @@
-const API_BASE = import.meta.env.VITE_API_BASE;
-
-const handleResponse = async (res) => {
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.error || data.message || "Request failed");
-  }
-  return data;
-};
-
-const getAuthHeaders = () => ({
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${localStorage.getItem("token")}`,
-});
+import fetchPublic from "./fetchPublic";
+import fetchWithAuth from "./fetchWithAuth";
 
 const certificationApi = {
-  // Request a certification from pet profile
-  requestCertification: (data) =>
-    fetch(`${API_BASE}/certifications`, {
+  // Request a new certification
+  requestCertification: async (data) =>
+    fetchWithAuth("/certifications", {
       method: "POST",
-      headers: getAuthHeaders(),
       body: JSON.stringify(data),
-    }).then(handleResponse),
+    }),
 
-  // Get courses user can request (from kennels/clubs they're in)
-  getMyIssuableCourses: () =>
-    fetch(`${API_BASE}/courses/my-issuable`, {
-      headers: getAuthHeaders(),
-    }).then(handleResponse),
+  // Get courses this user can issue certificates for
+  getMyIssuableCourses: async () =>
+    fetchWithAuth("/courses/my-issuable"),
 
-  // Dashboard: pending certifications to approve/reject
-  getPendingCertifications: () =>
-    fetch(`${API_BASE}/certifications/pending`, {
-      headers: getAuthHeaders(),
-    }).then(handleResponse),
+  // Get pending certification requests (for club/kennel admins)
+  getPendingCertifications: async () =>
+    fetchWithAuth("/certifications/pending"),
 
-  // Approve / Reject
-  approveCertification: (id) =>
-    fetch(`${API_BASE}/certifications/${id}/approve`, {
+  // Verify/approve a certification
+  verifyCertification: async (id) =>
+    fetchWithAuth(`/certifications/${id}/verify`, {
       method: "PATCH",
-      headers: getAuthHeaders(),
-    }).then(handleResponse),
+    }),
 
-  rejectCertification: (id) =>
-    fetch(`${API_BASE}/certifications/${id}/reject`, {
+  // Reject a certification
+  rejectCertification: async (id, reason = "") =>
+    fetchWithAuth(`/certifications/${id}/reject`, {
       method: "PATCH",
-      headers: getAuthHeaders(),
-    }).then(handleResponse),
+      body: JSON.stringify({ reason }),
+    }),
 };
 
 export default certificationApi;

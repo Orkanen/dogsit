@@ -1,0 +1,173 @@
+.club-dashboard {
+  max-width: 1100px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  &__title {
+    font-size: 2.8rem;
+    font-weight: 800;
+    margin: 0;
+    background: linear-gradient(135deg, #7c3aed, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  &__home-link {
+    color: #7c3aed;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__section-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__count {
+    font-size: 1rem;
+    background: #f3e8ff;
+    color: #7c3aed;
+    padding: 0.25rem 0.75rem;
+    border-radius: 50px;
+    font-weight: 700;
+  }
+
+  &__loader {
+    text-align: center;
+    padding: 4rem;
+    color: #64748b;
+    font-size: 1.1rem;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: #f8fafc;
+    border-radius: 20px;
+    color: #64748b;
+
+    p {
+      margin: 0.75rem 0;
+      font-size: 1.2rem;
+    }
+
+    &-hint {
+      font-size: 1rem;
+      color: #94a3b8;
+      font-style: italic;
+    }
+  }
+
+  &__create-link {
+    color: #7c3aed;
+    font-weight: 600;
+    text-decoration: underline;
+  }
+
+  /* My Clubs Grid */
+  &__kennels-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+
+  /* Requests */
+  &__requests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  /* Courses & Competitions Section */
+  &__courses {
+    background: linear-gradient(135deg, #f3e8ff 0%, #faf5ff 100%);
+    border-radius: 24px;
+    padding: 2.5rem;
+    margin-bottom: 3rem;
+    border: 1px solid #e0ccff;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, #7c3aed, #a78bfa, #ddd6fe);
+    }
+
+    h2 {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #5b21b6;
+      margin: 0 0 2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+
+      &::after {
+        content: '';
+        height: 4px;
+        flex: 1;
+        background: linear-gradient(90deg, #ddd6fe, transparent);
+        border-radius: 2px;
+      }
+    }
+
+    .courses-list {
+      display: grid;
+      gap: 1.25rem;
+      margin-top: 2rem;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    }
+
+    .course-item {
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      border: 1px solid #e0ccff;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 16px 35px rgba(124, 58, 237, 0.15);
+        border-color: #7c3aed;
+      }
+
+      strong {
+        font-size: 1.2rem;
+        color: #5b21b6;
+        display: block;
+        margin-bottom: 0.5rem;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    &__title {
+      font-size: 2.4rem;
+    }
+  }
+}

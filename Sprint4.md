@@ -178,3 +178,62 @@ As Trainer, Kennel, Company, Advertisers be able to purchase the ability to crea
 Receipts should have unique identifier foil. (Stars, Circles, Squares, Triangles, Moons, Arrows..)*(Rotation)*(Colors)*(Direction of parallax).
 Reciepts should be able to be combined for easier monthly/yearly accounting.
 Chat's should be able to link/show direction (gps).
+
+
+WORKING ON APPLYING CLUBS CORRECTLY.
+
+Need to add APPROVE/REJECT cards to club. (Necessary for awards - might need to look at that logic).
+Expired token should log you out -> using the website should update your token.
+Courses need to be able to be deleted.
+People who request certification for their pet can be denied (Exists), but should not be prevented from requesting again.
+Uncaught ReferenceError: handleJoin is not defined when attempting to access Club Profile. Should be a redirect most likely?
+Request Membership (/clubs) link does not work. sends you to /club/id, also breaks entire webpage. Auth system is not working correctly.
+- Auth is definetly not functioning correctly.
+KennelDashboard is giving Club Dashboard error setClubs is not defined... -FIXED REMOVED CourseForm.jsx
+
+I would like for ClubDashboard to have a similar Incoming Requests as the KennelDashboard, it was very nice and everything ended up in one container.
+
+Auth / token stability (high)
+
+Auto-logout on expired/invalid token (401).
+Ensure login persistently stores token and user.
+Refresh token on use (optional later, but at least update token on any successful refresh endpoint).
+Competition UI → API alignment (high)
+
+Use CompetitionAllowedAwarder endpoints for competitions (you already found this).
+Add approve/reject UI in ClubDashboard cards for awarders.
+Fix broken navigation / form behaviors (medium)
+
+Fix handleJoin undefined (redirect to login / call join API).
+Fix "Request Membership (/clubs)" link behavior (should go to club request route).
+Ensure buttons inside forms have type="button" to avoid navigation POSTs.
+Data and UX fixes (medium)
+
+Courses deletion API+UI.
+Allow re-request of pet certification after rejection (status flow: rejected → can re-request).
+Add incoming requests view to ClubDashboard (mirror KennelDashboard).
+Add consistent cards for Approve / Reject flows.
+Cleanup / polish (low)
+
+Improve messages for 409s (Nomination already exists).
+Prevent duplicate nominations in UI (disable nominate button when already nominated).
+
+all protected Routes need to be fixed api.get*
+
+REQUIRED BACKEND ENDPOINTS.
+// club.js
+GET /clubs/my-managed        → where role IN ("OWNER", "EMPLOYEE")
+GET /clubs/requests/my-all   → all pending requests from my clubs
+
+// courses.js
+GET /courses/my-managed      → courses from clubs I manage
+
+// competitions.js
+GET /competitions/my-managed → competitions from clubs I manage
+
+routes /me might need to be a join table later, and then distributed correctly.
+
+12-06
+Club -> Courses -> Edit
+Club -> Competitions -> Edit 
+Club -> Competitions -> Awards (Reward Pet)

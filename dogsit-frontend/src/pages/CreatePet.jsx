@@ -28,8 +28,8 @@ export default function CreatePet() {
     const loadKennels = async () => {
       try {
         const [all, mine] = await Promise.all([
-          api.getKennels(),
-          api.getMyKennels(),
+          api.kennel.getKennels(),
+          api.kenel.getMyKennels(),
         ]);
         setKennels(all);
         setMyKennels(mine.map(k => k.id));
@@ -64,7 +64,7 @@ export default function CreatePet() {
         const fd = new FormData();
         fd.append("file", imageFile);
         fd.append("alt", `${form.name}'s photo`);
-        const img = await api.uploadImage(fd);
+        const img = await api.image.uploadImage(fd);
         imageId = img.id;
       }
 
@@ -76,19 +76,19 @@ export default function CreatePet() {
 
       // CASE 1: User owns the selected kennel → auto-verify (no request needed)
       if (form.kennelId && myKennels.includes(Number(form.kennelId))) {
-        const pet = await api.createPet(petData);
-        if (imageId) await api.attachImageToPet(pet.id, imageId);
+        const pet = await api.pet.createPet(petData);
+        if (imageId) await api.image.attachImageToPet(pet.id, imageId);
         navigate(`/pets/${pet.id}`);
         return;
       }
 
       // CASE 2: Selected a kennel they don't own → create pet + auto-send request
       if (form.kennelId) {
-        const pet = await api.createPet({ ...petData, kennelId: null });
-        if (imageId) await api.attachImageToPet(pet.id, imageId);
+        const pet = await api.pet.createPet({ ...petData, kennelId: null });
+        if (imageId) await api.image.attachImageToPet(pet.id, imageId);
 
         try {
-          await api.requestPetLink(
+          await api.kennel.requestPetLink(
             Number(form.kennelId),
             pet.id,
             `This pet (${form.name}) was born in your kennel. Please verify.`
@@ -102,8 +102,8 @@ export default function CreatePet() {
       }
 
       // CASE 3: No kennel selected → normal creation
-      const pet = await api.createPet(petData);
-      if (imageId) await api.attachImageToPet(pet.id, imageId);
+      const pet = await api.pet.createPet(petData);
+      if (imageId) await api.image.attachImageToPet(pet.id, imageId);
       navigate(`/pets/${pet.id}`);
 
     } catch (err) {

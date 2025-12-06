@@ -1,0 +1,72 @@
+.course-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  
+    &:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(124, 58, 237, 0.15);
+      border-color: #7c3aed;
+    }
+  
+    &__title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #5b21b6;
+      margin: 0 0 1rem;
+    }
+  
+    &__description {
+      color: #4c1d95;
+      line-height: 1.6;
+      flex: 1;
+      margin-bottom: 1rem;
+    }
+  
+    &__meta {
+      color: #7c3aed;
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+    }
+  
+    &__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: auto;
+    }
+  
+    &--editing {
+      .course-card__input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+  
+        &--title {
+          font-size: 1.5rem;
+          font-weight: 700;
+        }
+  
+        &--description {
+          min-height: 120px;
+          resize: vertical;
+        }
+  
+        &:focus {
+          outline: none;
+          border-color: #7c3aed;
+          box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+      }
+    }
+  }

@@ -1,4 +1,3 @@
-// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -25,48 +24,124 @@ enum Sex {
 enum AwardType {
   CERTIFICATE
   REWARD
-  PRICE
+  PRIZE
   DIPLOMA
+}
+
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum AvailabilityPeriod {
+  MORNING
+  DAY
+  NIGHT
+}
+
+enum CertificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REVOKED
+}
+
+enum IssuerType {
+  KENNEL
+  CLUB
+}
+
+enum EnrollmentStatus {
+  APPLIED
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum CompetitionStatus {
+  SCHEDULED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum ClubMemberRole {
+  OWNER
+  EMPLOYEE
+  MEMBER
+}
+
+enum ClubCertifierStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REVOKED
+}
+
+enum KennelMemberRole {
+  OWNER
+  EMPLOYEE
+  MEMBER
+}
+
+enum EntryStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
 }
 
 /**
  * ---------- MODELS ----------
  */
 model User {
-  id       Int      @id @default(autoincrement())
-  email    String   @unique
-  password String
-  profile  Profile?
-
+  id                                 Int                         @id @default(autoincrement())
+  email                              String                      @unique
+  password                           String
+  profile                            Profile?
   // Roles
-  roles UserRole[]
-
+  roles                              UserRole[]
   // Matches
-  sentMatches     Match[] @relation("MatchOwner")
-  receivedMatches Match[] @relation("MatchSitter")
-
+  sentMatches                        Match[]                     @relation("MatchOwner")
+  receivedMatches                    Match[]                     @relation("MatchSitter")
   // Kennel membership
-  kennelMemberships KennelMember[]
-
-  membershipRequests KennelMembershipRequest[] @relation("UserKennelMembershipRequests")
-
+  kennelMemberships                  KennelMember[]
+  membershipRequests                 KennelMembershipRequest[]   @relation("UserKennelMembershipRequests")
+  competitionEntries                 CompetitionEntry[]
   // Messages
-  sentMessages Message[]
-
+  sentMessages                       Message[]
   // Pets owned
-  petsOwned Pet[] @relation("PetOwner")
-
+  petsOwned                          Pet[]                       @relation("PetOwner")
   // Awards issued / claimed
-  awardsIssued  Award[] @relation("AwardIssuer")
-  awardsClaimed Award[] @relation("AwardClaimed")
-
+  awardsIssued                       Award[]                     @relation("AwardIssuer")
+  awardsClaimed                      Award[]                     @relation("AwardClaimed")
   // Club membership
-  clubMemberships ClubMember[]
-
-  certifications Certification[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  clubMemberships                    ClubMember[]
+  certifications                     Certification[]
+  // Enrollments (for courses)
+  courseEnrollments                  CourseEnrollment[]
+  // Club certifier relations
+  clubCertificationsGranted          ClubCertifier[]             @relation("CertifierGrantedTo")
+  clubCertificationsIssued           ClubCertifier[]             @relation("CertifierIssuedBy")
+  clubCertifiersProcessed            ClubCertifier[]             @relation("CertifierProcessedByAdmin")
+  // Courses certifier relations
+  certifiedCourses CourseCertifierAssignment[]  
+  // Certifications verified by a club/kennel user
+  certificationsVerified             Certification[]             @relation("CertificationVerifiedByUser")
+  // Competition awards assigned by this user
+  competitionAwardsAssigned          CompetitionAward[]          @relation("CompetitionAwardAwardedBy")
+  // Competitions this user is allowed to award (nomination records)
+  competitionsAllowedToAward         CompetitionAllowedAwarder[] @relation("CompetitionAllowedAwarderUser")
+  // Records this user nominated for awarder
+  competitionAllowedAwarderNominated CompetitionAllowedAwarder[] @relation("CompetitionAllowedAwarderNominatedBy")
+  // Records this user processed (approved/rejected) for awarder nominations
+  competitionAllowedAwarderProcessed CompetitionAllowedAwarder[] @relation("CompetitionAllowedAwarderProcessedBy")
+  // User-submitted paperwork (admin-processed)
+  userCertificateSubmissions         UserCertificateSubmission[] // inverse of UserCertificateSubmission.user
+  // Submissions processed by this user as admin
+  processedCertificateSubmissions    UserCertificateSubmission[] @relation("UserCertificateSubmissionProcessedBy")
+  createdAt                          DateTime                    @default(now())
+  updatedAt                          DateTime                    @updatedAt
 }
 
 model Role {
@@ -78,9 +153,8 @@ model Role {
 model UserRole {
   userId Int
   roleId Int
-
-  user User @relation(fields: [userId], references: [id])
-  role Role @relation(fields: [roleId], references: [id])
+  user   User @relation(fields: [userId], references: [id])
+  role   Role @relation(fields: [roleId], references: [id])
 
   @@id([userId, roleId])
   @@unique([userId, roleId])
@@ -90,71 +164,68 @@ model UserRole {
  * ---------- PROFILE ----------
  */
 model Profile {
-  id        Int     @id @default(autoincrement())
-  firstName String?
-  lastName  String?
-  bio       String?
-  location  String?
-
+  id                Int                     @id @default(autoincrement())
+  firstName         String?
+  lastName          String?
+  bio               String?
+  location          String?
   // Sitter-specific fields
   pricePerDay       Int?
   publicEmail       String?
   publicPhone       String?
   sitterDescription String?
-
-  availability    SitterAvailability[]
-  services        SitterService[]
-  breedExperience SitterBreedExperience[]
-
-  user   User @relation(fields: [userId], references: [id])
-  userId Int  @unique
+  availability      SitterAvailability[]
+  services          SitterService[]
+  breedExperience   SitterBreedExperience[]
+  user              User                    @relation(fields: [userId], references: [id])
+  userId            Int                     @unique
 }
 
 /**
  * ---------- MATCH ----------
  */
 model Match {
-  id       Int         @id @default(autoincrement())
-  ownerId  Int
-  sitterId Int
-  status   MatchStatus @default(PENDING)
-
-  owner  User @relation("MatchOwner", fields: [ownerId], references: [id])
-  sitter User @relation("MatchSitter", fields: [sitterId], references: [id])
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id        Int         @id @default(autoincrement())
+  ownerId   Int
+  sitterId  Int
+  status    MatchStatus @default(PENDING)
+  owner     User        @relation("MatchOwner", fields: [ownerId], references: [id])
+  sitter    User        @relation("MatchSitter", fields: [sitterId], references: [id])
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
   messages  Message[]
 
   @@unique([ownerId, sitterId])
 }
 
-// ==================== KENNEL ====================
+/**
+ * ==================== KENNEL ====================
+ */
 model Kennel {
-  id                 Int                       @id @default(autoincrement())
-  name               String                    @unique
-  location           String?
-  members            KennelMember[]
-  pets               Pet[]
-  litters            Litter[]
-  awards             Award[]
-  images             Image[]
-  membershipRequests KennelMembershipRequest[] @relation("KennelMembershipRequests")
-  petRequests        KennelPetRequest[]        @relation("KennelPetRequests")
-  createdAt          DateTime                  @default(now())
-  updatedAt          DateTime                  @updatedAt
-
-  coursesIssued Course[] @relation("KennelCourses")
-  issuedPetCertifications Certification[] @relation("KennelIssuedCertifications")
+  id                      Int                       @id @default(autoincrement())
+  name                    String                    @unique
+  location                String?
+  members                 KennelMember[]
+  pets                    Pet[]
+  litters                 Litter[]
+  awards                  Award[]
+  images                  Image[]
+  membershipRequests      KennelMembershipRequest[] @relation("KennelMembershipRequests")
+  petRequests             KennelPetRequest[]        @relation("KennelPetRequests")
+  competitions            Competition[]
+  competitionEntries      CompetitionEntry[]
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  coursesIssued           Course[]                  @relation("KennelCourses")
+  issuedPetCertifications Certification[]           @relation("KennelIssuedCertifications")
 }
 
 model KennelMember {
   kennelId Int
   userId   Int
-  role     String
-
-  kennel Kennel @relation(fields: [kennelId], references: [id])
-  user   User   @relation(fields: [userId], references: [id])
+  role     KennelMemberRole @default(MEMBER)
+  kennel   Kennel           @relation(fields: [kennelId], references: [id])
+  user     User             @relation(fields: [userId], references: [id])
 
   @@id([kennelId, userId])
   @@index([kennelId])
@@ -165,47 +236,40 @@ model KennelMember {
  * ---------- PET ----------
  */
 model Pet {
-  id       Int     @id @default(autoincrement())
-  name     String?
-  species  String?
-  breed    String?
-  color    String?
-  sex      Sex?
-  age      Int?
-  ownerId  Int?
-  kennelId Int?
-
-  owner  User?   @relation("PetOwner", fields: [ownerId], references: [id])
-  kennel Kennel? @relation(fields: [kennelId], references: [id])
-
-  certifications Certification[]
-
-  kennelRequests KennelPetRequest[] @relation("PetKennelRequests")
-
+  id                 Int                @id @default(autoincrement())
+  name               String?
+  species            String?
+  breed              String?
+  color              String?
+  sex                Sex?
+  age                Int?
+  ownerId            Int?
+  kennelId           Int?
+  owner              User?              @relation("PetOwner", fields: [ownerId], references: [id])
+  kennel             Kennel?            @relation(fields: [kennelId], references: [id])
+  certifications     Certification[]
+  courseEnrollments  CourseEnrollment[]
+  competitionEntries CompetitionEntry[]
+  kennelRequests     KennelPetRequest[] @relation("PetKennelRequests")
   // Family tree
-  parentMotherId Int?
-  parentFatherId Int?
-  parentMother   Pet?  @relation("PetChildren", fields: [parentMotherId], references: [id])
-  parentFather   Pet?  @relation("PetChildrenFather", fields: [parentFatherId], references: [id])
-  children       Pet[] @relation("PetChildren")
-  childrenFather Pet[] @relation("PetChildrenFather")
-
+  parentMotherId     Int?
+  parentFatherId     Int?
+  parentMother       Pet?               @relation("PetChildren", fields: [parentMotherId], references: [id])
+  parentFather       Pet?               @relation("PetChildrenFather", fields: [parentFatherId], references: [id])
+  children           Pet[]              @relation("PetChildren")
+  childrenFather     Pet[]              @relation("PetChildrenFather")
   // Litter
-  litter   Litter? @relation("LitterPets", fields: [litterId], references: [id])
-  litterId Int?
-
+  litter             Litter?            @relation("LitterPets", fields: [litterId], references: [id])
+  litterId           Int?
   // Images
-  images Image[]
-
+  images             Image[]
   // Awards
-  awards Award[]
-
+  awards             Award[]
   // Litter parent roles
-  littersAsMother Litter[] @relation("PetLitterMother")
-  littersAsFather Litter[] @relation("PetLitterFather")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  littersAsMother    Litter[]           @relation("PetLitterMother")
+  littersAsFather    Litter[]           @relation("PetLitterFather")
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 
   @@unique([name, kennelId])
 }
@@ -219,15 +283,12 @@ model Litter {
   motherId  Int
   fatherId  Int
   birthDate DateTime?
-
-  kennel Kennel @relation(fields: [kennelId], references: [id])
-  mother Pet    @relation("PetLitterMother", fields: [motherId], references: [id])
-  father Pet    @relation("PetLitterFather", fields: [fatherId], references: [id])
-
-  pets Pet[] @relation("LitterPets")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  kennel    Kennel    @relation(fields: [kennelId], references: [id])
+  mother    Pet       @relation("PetLitterMother", fields: [motherId], references: [id])
+  father    Pet       @relation("PetLitterFather", fields: [fatherId], references: [id])
+  pets      Pet[]     @relation("LitterPets")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   @@unique([kennelId, motherId, fatherId])
 }
@@ -236,17 +297,15 @@ model Litter {
  * ---------- IMAGE (single source of truth) ----------
  */
 model Image {
-  id       Int     @id @default(autoincrement())
-  url      String
-  alt      String?
-  petId    Int?
-  kennelId Int?
-  awardId  Int?    @unique // ← ONE-TO-ONE: only one image per award
-
-  pet    Pet?    @relation(fields: [petId], references: [id])
-  kennel Kennel? @relation(fields: [kennelId], references: [id])
-  award  Award?  @relation(fields: [awardId], references: [id])
-
+  id        Int      @id @default(autoincrement())
+  url       String
+  alt       String?
+  petId     Int?
+  kennelId  Int?
+  awardId   Int?     @unique // ← ONE-TO-ONE: only one image per award
+  pet       Pet?     @relation(fields: [petId], references: [id])
+  kennel    Kennel?  @relation(fields: [kennelId], references: [id])
+  award     Award?   @relation(fields: [awardId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -259,28 +318,31 @@ model Image {
  * ---------- AWARD ----------
  */
 model Award {
-  id              Int       @id @default(autoincrement())
-  type            AwardType
-  name            String
-  isOfficial      Boolean   @default(false)
-  isClaimable     Boolean   @default(false)
-  issuerId        Int
-  clubId          Int?
-  claimedByUserId Int?
-  petId           Int?
-  kennelId        Int?
-
-  issuer    User    @relation("AwardIssuer", fields: [issuerId], references: [id])
-  club      Club?   @relation(fields: [clubId], references: [id])
-  claimedBy User?   @relation("AwardClaimed", fields: [claimedByUserId], references: [id])
-  pet       Pet?    @relation(fields: [petId], references: [id])
-  kennel    Kennel? @relation(fields: [kennelId], references: [id])
-  image     Image? // ← ONE-TO-ONE: award has one badge image
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                Int                @id @default(autoincrement())
+  type              AwardType
+  name              String
+  isOfficial        Boolean            @default(false)
+  isClaimable       Boolean            @default(false)
+  issuerId          Int
+  clubId            Int?
+  competitionId     Int? // optional link to a competition
+  claimedByUserId   Int?
+  petId             Int?
+  kennelId          Int?
+  issuer            User               @relation("AwardIssuer", fields: [issuerId], references: [id])
+  club              Club?              @relation(fields: [clubId], references: [id])
+  competition       Competition?       @relation(fields: [competitionId], references: [id])
+  competitionAwards CompetitionAward[]
+  claimedBy         User?              @relation("AwardClaimed", fields: [claimedByUserId], references: [id])
+  pet               Pet?               @relation(fields: [petId], references: [id])
+  kennel            Kennel?            @relation(fields: [kennelId], references: [id])
+  image             Image? // ← ONE-TO-ONE: award has one badge image
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 
   @@unique([name, kennelId])
+  @@index([clubId])
+  @@index([competitionId])
 }
 
 /**
@@ -292,35 +354,60 @@ model Message {
   senderId  Int
   message   String
   timestamp DateTime @default(now())
-
-  match  Match? @relation(fields: [matchId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  sender User   @relation(fields: [senderId], references: [id])
+  match     Match?   @relation(fields: [matchId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  sender    User     @relation(fields: [senderId], references: [id])
 
   @@index([matchId, timestamp])
 }
 
-// ==================== CLUB ====================
+/**
+ * ==================== CLUB ====================
+ */
 model Club {
-  id                 Int          @id @default(autoincrement())
-  name               String       @unique
-  membershipType     String
-  verificationStatus String       @default("PENDING")
-  members            ClubMember[]
-  awardsIssued       Award[]
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
-
-  coursesIssued Course[] @relation("ClubCourses")
+  id                       Int             @id @default(autoincrement())
+  name                     String          @unique
+  membershipType           String
+  verificationStatus       String          @default("PENDING")
+  members                  ClubMember[]
+  awardsIssued             Award[]
+  competitions             Competition[]
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+  coursesIssued            Course[]        @relation("ClubCourses")
   issuedUserCertifications Certification[] @relation("ClubIssuedCertifications")
+  certifiers               ClubCertifier[]
+}
+
+model ClubCertifier {
+  id                     Int                 @id @default(autoincrement())
+  clubId                 Int
+  userId                 Int // user who is nominated to be a certifier
+  grantedById            Int? // user (club owner/employee) who nominated/granted
+  status                 ClubCertifierStatus @default(PENDING)
+  requestedAt            DateTime            @default(now())
+  processedAt            DateTime?
+  processedByAdminId     Int? // platform admin user id who approved/rejected
+  notes                  String?
+  verifiedCertifications Certification[]
+  competitions           Competition[]
+  club                   Club                @relation(fields: [clubId], references: [id])
+  user                   User                @relation("CertifierGrantedTo", fields: [userId], references: [id])
+  grantedBy              User?               @relation("CertifierIssuedBy", fields: [grantedById], references: [id])
+  processedByAdmin       User?               @relation("CertifierProcessedByAdmin", fields: [processedByAdminId], references: [id])
+
+  @@unique([clubId, userId])
+  @@index([status])
+  @@index([processedByAdminId])
 }
 
 model ClubMember {
-  clubId Int
-  userId Int
-  status String @default("PENDING")
-
-  club Club @relation(fields: [clubId], references: [id])
-  user User @relation(fields: [userId], references: [id])
+  clubId   Int
+  userId   Int
+  status   String         @default("PENDING")
+  role     ClubMemberRole @default(MEMBER)
+  joinedAt DateTime?      @default(now())
+  club     Club           @relation(fields: [clubId], references: [id])
+  user     User           @relation(fields: [userId], references: [id])
 
   @@id([clubId, userId])
 }
@@ -328,14 +415,6 @@ model ClubMember {
 /**
  * --------- REQUESTS ------------
  */
-
-enum RequestStatus {
-  PENDING
-  ACCEPTED
-  REJECTED
-}
-
-// 1. Membership Request (user wants to join kennel staff)
 model KennelMembershipRequest {
   id        Int           @id @default(autoincrement())
   kennelId  Int
@@ -344,18 +423,15 @@ model KennelMembershipRequest {
   status    RequestStatus @default(PENDING)
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
-
-  type String @default("MEMBERSHIP")
-
-  kennel Kennel @relation("KennelMembershipRequests", fields: [kennelId], references: [id])
-  user   User   @relation("UserKennelMembershipRequests", fields: [userId], references: [id])
+  type      String        @default("MEMBERSHIP")
+  kennel    Kennel        @relation("KennelMembershipRequests", fields: [kennelId], references: [id])
+  user      User          @relation("UserKennelMembershipRequests", fields: [userId], references: [id])
 
   @@unique([kennelId, userId])
   @@index([kennelId])
   @@index([userId])
 }
 
-// 2. Pet Link Request ("This dog was bred by this kennel")
 model KennelPetRequest {
   id        Int           @id @default(autoincrement())
   kennelId  Int
@@ -364,18 +440,18 @@ model KennelPetRequest {
   status    RequestStatus @default(PENDING)
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
-
-  type String @default("PET_LINK")
-
-  kennel Kennel @relation("KennelPetRequests", fields: [kennelId], references: [id])
-  pet    Pet    @relation("PetKennelRequests", fields: [petId], references: [id])
+  type      String        @default("PET_LINK")
+  kennel    Kennel        @relation("KennelPetRequests", fields: [kennelId], references: [id])
+  pet       Pet           @relation("PetKennelRequests", fields: [petId], references: [id])
 
   @@unique([kennelId, petId])
   @@index([kennelId])
   @@index([petId])
 }
 
-// 1. Availability — THE MOST IMPORTANT ONE
+/**
+ * SITTER: Availability / Services / Breed experience
+ */
 model SitterAvailability {
   id     Int                @id @default(autoincrement())
   userId Int
@@ -383,17 +459,9 @@ model SitterAvailability {
   user   Profile            @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
   @@unique([userId, period])
-  @@index([period]) // ← lightning-fast filters
+  @@index([period])
 }
 
-enum AvailabilityPeriod {
-  MORNING
-  DAY
-  NIGHT
-  // add WEEKEND, CUSTOM later
-}
-
-// 2. Services Offered
 model Service {
   id      Int             @id @default(autoincrement())
   name    String          @unique // "Overnight", "Walking", "Grooming", "Training"
@@ -410,7 +478,6 @@ model SitterService {
   @@index([serviceId])
 }
 
-// 3. Breed Experience (optional but nice)
 model SitterBreedExperience {
   userId Int
   breed  String // or connect to normalized Breed table later
@@ -419,58 +486,98 @@ model SitterBreedExperience {
   @@unique([userId, breed])
 }
 
-// ==================== COURSE ====================
+/**
+ * ==================== COURSE ====================
+ */
 model Course {
-  id          Int     @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   title       String
   description String?
-  issuerType  String // "KENNEL" or "CLUB"
+  issuerType  IssuerType
+  kennelId    Int?
+  clubId      Int?
 
-  kennelId Int?
-  clubId   Int?
+  // ──── RELATIONS ────
+  kennel      Kennel?   @relation("KennelCourses", fields: [kennelId], references: [id])
+  club        Club?     @relation("ClubCourses", fields: [clubId], references: [id])
 
-  kennel Kennel? @relation("KennelCourses", fields: [kennelId], references: [id])
-  club   Club?   @relation("ClubCourses", fields: [clubId], references: [id])
+  certifiers CourseCertifierAssignment[]
 
-  createdAt     DateTime        @default(now())
-  Certification Certification[]
+  createdAt   DateTime  @default(now())
+  certifications Certification[]
+  enrollments    CourseEnrollment[]
 
   @@index([issuerType])
   @@index([kennelId])
   @@index([clubId])
 }
 
-enum CertificationStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  REVOKED
+model CourseCertifierAssignment {
+  courseId   Int
+  userId     Int
+  assignedAt DateTime @default(now())
+  role       String?  // e.g. "lead", "assistant" — future-proof
+
+  course     Course   @relation(fields: [courseId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@id([courseId, userId])
+  @@index([courseId])
+  @@index([userId])
 }
 
-//==== CERTIFICATION ======
+model CourseEnrollment {
+  id          Int              @id @default(autoincrement())
+  courseId    Int
+  userId      Int?
+  petId       Int?
+  status      EnrollmentStatus @default(APPLIED)
+  appliedAt   DateTime         @default(now())
+  processedAt DateTime?
+  processedBy Int? // user id (club employee/owner) who approved/rejected enrollment
+  notes       String?
+  course      Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user        User?            @relation(fields: [userId], references: [id])
+  pet         Pet?             @relation(fields: [petId], references: [id])
+
+  @@unique([courseId, userId])
+  @@unique([courseId, petId])
+  @@index([courseId])
+  @@index([status])
+}
+
+/**
+ * ==== CERTIFICATION ======
+ * Important: clubs nominate certifiers (ClubCertifier) but certifier nominations
+ * must be APPROVED by a platform admin before they can be used. Certifications
+ * recorded here may be verified by a ClubCertifier, but the final approval
+ * (certificate issuance) must be approvedByAdmin (platform admin) to be considered valid.
+ */
 model Certification {
-  id              Int      @id @default(autoincrement())
-  courseId        Int
-  userId          Int?
-  petId           Int?
-
-  issuingKennelId Int?
-  issuingClubId   Int?
-
-  status          CertificationStatus @default(PENDING)
-  certificateUrl  String?             @db.VarChar(500)
-  issuedAt        DateTime?
-  revokedAt       DateTime?
-  notes           String?             @db.Text
-
-  course          Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  user            User?     @relation(fields: [userId], references: [id])
-  pet             Pet?      @relation(fields: [petId],  references: [id])
-  issuingKennel   Kennel?   @relation("KennelIssuedCertifications", fields: [issuingKennelId], references: [id])
-  issuingClub     Club?     @relation("ClubIssuedCertifications",   fields: [issuingClubId],   references: [id])
-
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                    Int                 @id @default(autoincrement())
+  courseId              Int
+  userId                Int?
+  petId                 Int?
+  issuingKennelId       Int?
+  issuingClubId         Int?
+  status                CertificationStatus @default(PENDING)
+  certificateUrl        String?             @db.VarChar(500)
+  issuedAt              DateTime?
+  revokedAt             DateTime?
+  notes                 String?             @db.Text
+  // who (club certifier record) verified the completion (if applicable)
+  verifiedByCertifierId Int?
+  verifiedByCertifier   ClubCertifier?      @relation(fields: [verifiedByCertifierId], references: [id])
+  // user who actually verified the certification (owner/employee)
+  verifiedByUserId      Int?
+  verifiedByUser        User?               @relation("CertificationVerifiedByUser", fields: [verifiedByUserId], references: [id])
+  course                Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user                  User?               @relation(fields: [userId], references: [id])
+  pet                   Pet?                @relation(fields: [petId], references: [id])
+  issuingKennel         Kennel?             @relation("KennelIssuedCertifications", fields: [issuingKennelId], references: [id])
+  issuingClub           Club?               @relation("ClubIssuedCertifications", fields: [issuingClubId], references: [id])
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
 
   @@unique([courseId, petId])
   @@unique([courseId, userId])
@@ -479,4 +586,132 @@ model Certification {
   @@index([petId])
   @@index([issuingKennelId])
   @@index([issuingClubId])
+  @@index([verifiedByCertifierId])
+  @@index([verifiedByUserId])
+}
+
+/**
+ * ================= COMPETITIONS =================
+ */
+model Competition {
+  id                Int                         @id @default(autoincrement())
+  title             String
+  description       String?
+  issuerType        IssuerType
+  kennelId          Int?
+  clubId            Int?
+  certifierId       Int?
+  startAt           DateTime?
+  endAt             DateTime?
+  status            CompetitionStatus           @default(SCHEDULED)
+  createdAt         DateTime                    @default(now())
+  kennel            Kennel?                     @relation(fields: [kennelId], references: [id])
+  club              Club?                       @relation(fields: [clubId], references: [id])
+  certifier         ClubCertifier?              @relation(fields: [certifierId], references: [id])
+  entries           CompetitionEntry[]
+  awards            Award[]
+  competitionAwards CompetitionAward[]
+  // new: allowed awarders nomination records
+  allowedAwarders   CompetitionAllowedAwarder[]
+
+  @@index([issuerType])
+  @@index([kennelId])
+  @@index([clubId])
+  @@index([status])
+  @@index([certifierId])
+}
+
+/**
+ * CompetitionAllowedAwarder:
+ * - join model to nominate and approve users allowed to award for a competition
+ */
+model CompetitionAllowedAwarder {
+  competitionId Int
+  userId        Int
+  nominatedById Int?
+  status        RequestStatus @default(PENDING)
+  nominatedAt   DateTime      @default(now())
+  processedAt   DateTime?
+  processedById Int?
+  notes         String?
+
+  competition Competition @relation(fields: [competitionId], references: [id])
+  // explicit relation name because we have multiple relations between User and this model
+  user        User        @relation("CompetitionAllowedAwarderUser", fields: [userId], references: [id])
+  nominatedBy User?       @relation("CompetitionAllowedAwarderNominatedBy", fields: [nominatedById], references: [id])
+  processedBy User?       @relation("CompetitionAllowedAwarderProcessedBy", fields: [processedById], references: [id])
+
+  @@id([competitionId, userId])
+  @@index([competitionId])
+  @@index([userId])
+}
+
+/**
+ * An entry in a competition (a pet, a user, or a kennel entry)
+ */
+model CompetitionEntry {
+  id                Int                @id @default(autoincrement())
+  competitionId     Int
+  userId            Int? // optional if entry is a pet-only / kennel-only entry
+  petId             Int?
+  kennelId          Int?
+  status            EntryStatus        @default(PENDING)
+  score             Float?
+  placement         Int?
+  notes             String?
+  createdAt         DateTime           @default(now())
+  competition       Competition        @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  competitionAwards CompetitionAward[]
+  user              User?              @relation(fields: [userId], references: [id])
+  pet               Pet?               @relation(fields: [petId], references: [id])
+  kennel            Kennel?            @relation(fields: [kennelId], references: [id])
+
+  @@unique([competitionId, petId])
+  @@unique([competitionId, userId])
+  @@index([competitionId])
+  @@index([status])
+}
+
+/**
+ * Bridge model to assign an Award to a competition entry (or to the competition in general)
+ */
+model CompetitionAward {
+  id              Int               @id @default(autoincrement())
+  competitionId   Int
+  awardId         Int
+  entryId         Int? // optional: which entry got the award
+  awardedByUserId Int? // user who assigned the award
+  competition     Competition       @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  award           Award             @relation(fields: [awardId], references: [id], onDelete: Cascade)
+  entry           CompetitionEntry? @relation(fields: [entryId], references: [id])
+  awardedBy       User?             @relation("CompetitionAwardAwardedBy", fields: [awardedByUserId], references: [id])
+  createdAt       DateTime          @default(now())
+
+  @@unique([competitionId, awardId])
+  @@index([competitionId])
+  @@index([entryId])
+  @@index([awardedByUserId])
+}
+
+/**
+ * User-submitted official paperwork (for admins to review)
+ */
+model UserCertificateSubmission {
+  id             Int           @id @default(autoincrement())
+  userId         Int
+  courseId       Int?
+  petId          Int? // optional if submission is about a pet
+  certificateUrl String?       @db.VarChar(1000)
+  notes          String?       @db.Text
+  status         RequestStatus @default(PENDING)
+  submittedAt    DateTime      @default(now())
+  processedAt    DateTime?
+  processedById  Int?
+  processedBy    User?         @relation("UserCertificateSubmissionProcessedBy", fields: [processedById], references: [id])
+  user           User          @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([courseId])
+  @@index([petId])
+  @@index([status])
 }

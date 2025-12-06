@@ -13,7 +13,7 @@ export default function CertificationRequest({ petId, petName }) {
   useEffect(() => {
     const loadMyIssuableCourses = async () => {
       try {
-        const data = await api.getMyIssuableCourses(); // ← NEW ENDPOINT (see below)
+        const data = await api.courses.getMyIssuableCourses(); // ← NEW ENDPOINT (see below)
         setCourses(data || []);
       } catch (err) {
         console.error("Failed to load available courses:", err);
@@ -31,7 +31,7 @@ export default function CertificationRequest({ petId, petName }) {
 
     setSaving(true);
     try {
-      await api.requestCertification({
+      await api.certification.requestCertification({
         courseId: Number(selectedCourseId),
         targetType: "PET",
         targetId: petId,

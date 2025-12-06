@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getSocket } from "../lib/socket";
-import api from "../api/index";
+import api from "@/api";
 import { useAuth } from "../context/AuthContext";
 import "@/styles/pages/_chat.scss";
 
@@ -21,7 +21,7 @@ export default function Chat() {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const data = await api.getMessages(matchId);
+        const data = await api.message.getMessages(matchId);
         setMessages(data);
       } catch (err) {
         console.error("Failed to load messages:", err);

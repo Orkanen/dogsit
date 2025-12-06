@@ -1,58 +1,35 @@
-const API_BASE = import.meta.env.VITE_API_BASE
+import fetchPublic from "./fetchPublic";
+import fetchWithAuth from "./fetchWithAuth";
 
-const handleResponse = async (res) => {
-    const data = await res.json()
-    if (!res.ok) {
-        throw new Error(data.error || data.message || 'Request failed')
-    }
-    return data
-}
-
-const getAuthHeaders = () => ({
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${localStorage.getItem('token')}`,
-})
+const API_BASE = import.meta.env.VITE_API_BASE || "";
 
 const matchApi = {
-    // MATCHES
-    getMatches: () =>
-    fetch(`${API_BASE}/match`, { headers: getAuthHeaders() }).then(handleResponse),
+  // MATCHES
+  getMatches: () => fetchWithAuth(`/match`, { method: "GET" }),
 
-    createMatch: (sitterId) =>
-        fetch(`${API_BASE}/match`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ sitterId }),
-        }).then(handleResponse),
+  createMatch: (sitterId) =>
+    fetchWithAuth(`/match`, {
+      method: "POST",
+      body: JSON.stringify({ sitterId }),
+    }),
 
-    // ACCEPT
-    acceptMatch: (matchId) =>
-    fetch(`${API_BASE}/match/${matchId}/accept`, {
+  // ACCEPT
+  acceptMatch: (matchId) =>
+    fetchWithAuth(`/match/${matchId}/accept`, {
       method: "PATCH",
-      headers: getAuthHeaders(),
-    }).then(handleResponse),
-  
-    // REJECT
-    rejectMatch: (matchId) =>
-        fetch(`${API_BASE}/match/${matchId}/reject`, {
-        method: "PATCH",
-        headers: getAuthHeaders(),
-        }).then(handleResponse),
+    }),
 
-    // CANCEL
-    cancelMatch: (matchId) =>
-        fetch(`${API_BASE}/match/${matchId}`, {
-        method: "DELETE",
-        headers: getAuthHeaders(),
-        }).then(handleResponse),
+  // REJECT
+  rejectMatch: (matchId) =>
+    fetchWithAuth(`/match/${matchId}/reject`, {
+      method: "PATCH",
+    }),
 
-    // CREATE REQUEST
-    createMatch: (sitterId) =>
-        fetch(`${API_BASE}/match`, {
-            method: "POST",
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ sitterId }),
-        }).then(handleResponse),
-}
+  // CANCEL
+  cancelMatch: (matchId) =>
+    fetchWithAuth(`/match/${matchId}`, {
+      method: "DELETE",
+    }),
+};
 
-export default matchApi
+export default matchApi;

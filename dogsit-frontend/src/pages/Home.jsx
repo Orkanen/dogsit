@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import "@/styles/pages/_home.scss";
+import api from "@/api";
 
 export default function Home() {
   const token = localStorage.getItem("token");

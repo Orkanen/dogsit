@@ -1,38 +1,24 @@
-const API_BASE = import.meta.env.VITE_API_BASE
-
-const handleResponse = async (res) => {
-    const data = await res.json()
-    if (!res.ok) {
-        throw new Error(data.error || data.message || 'Request failed')
-    }
-    return data
-}
-
-const getAuthHeaders = () => ({
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${localStorage.getItem('token')}`,
-})
+import fetchPublic from "./fetchPublic";
+import fetchWithAuth from "./fetchWithAuth";
 
 const profileApi = {
-    // PROFILE
-    getProfile: () =>
-    fetch(`${API_BASE}/profile`, {
-    headers: getAuthHeaders(),
-    }).then(handleResponse),
+  getProfile: async () => {
+    return fetchWithAuth("/profile");
+  },
 
-    updateProfile: (data) =>
-    fetch(`${API_BASE}/profile`, {
-    method: 'POST',
-    headers: getAuthHeaders(),
-    body: JSON.stringify(data),
-    }).then(handleResponse),
+  updateProfile: async (data) => {
+    return fetchWithAuth("/profile", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
 
-    updateUserRoles: (roles) =>
-    fetch(`${API_BASE}/profile/roles`, {
-        method: "PATCH",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ roles }),
-    }).then(handleResponse),
-}
+  updateUserRoles: async (roles) => {
+    return fetchWithAuth("/profile/roles", {
+      method: "PATCH",
+      body: JSON.stringify({ roles }),
+    });
+  },
+};
 
-export default profileApi
+export default profileApi;

@@ -11,7 +11,7 @@ const handleResponse = async (res) => {
 const imageApi = {
     // === IMAGES ===
     uploadImage: (formData) =>
-    fetch(`${API_BASE}/images`, {
+    fetch(`/images`, {
         method: "POST",
         headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,

@@ -9,7 +9,7 @@ export default function KennelPetRequests() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.getKennelPetRequests()
+    api.kennel.getKennelPetRequests()
       .then(setRequests)
       .catch(() => setRequests([]))
       .finally(() => setLoading(false));
@@ -31,8 +31,8 @@ export default function KennelPetRequests() {
     if (!confirm(`Are you sure you want to ${status.toLowerCase()} this request?`)) return;
 
     try {
-      const updated = await api.acceptKennelRequest(requestId); // uses unified endpoint
-      if (status === "REJECTED") await api.rejectKennelRequest(requestId);
+      const updated = await api.kennel.acceptKennelRequest(requestId); // uses unified endpoint
+      if (status === "REJECTED") await api.kennel.rejectKennelRequest(requestId);
 
       setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status } : r));
       if (status === "ACCEPTED") alert("Pet officially linked to your kennel!");

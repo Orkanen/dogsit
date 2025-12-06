@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import api from "@/api"; // Fixed: use alias
+import api from "@/api";
 import "@/styles/pages/_editPet.scss";
 
 export default function EditPet() {
@@ -33,7 +33,7 @@ export default function EditPet() {
   useEffect(() => {
     const fetchPet = async () => {
       try {
-        const pet = await api.getPet(id);
+        const pet = await api.pet.getPet(id);
         setForm({
           name: pet.name || "",
           species: pet.species || "Dog",
@@ -58,8 +58,8 @@ export default function EditPet() {
     const loadVerificationData = async () => {
       try {
         const [allKennels, requests] = await Promise.all([
-          api.getKennels(),
-          api.getKennelRequests(), // Only returns requests for kennels you own
+          api.kennel.getKennels(),
+          api.kennel.getKennelRequests(), // Only returns requests for kennels you own
         ]);
 
         setKennels(allKennels);
@@ -105,17 +105,17 @@ export default function EditPet() {
         const formData = new FormData();
         formData.append("file", imageFile);
         formData.append("alt", `${form.name}'s photo`);
-        const img = await api.uploadImage(formData);
+        const img = await api.image.uploadImage(formData);
         imageId = img.id;
       }
 
-      await api.updatePet(id, {
+      await api.pet.updatePet(id, {
         ...form,
         age: form.age ? Number(form.age) : null,
       });
 
       if (imageId) {
-        await api.attachImageToPet(id, imageId);
+        await api.image.attachImageToPet(id, imageId);
       }
 
       navigate(`/pets/${id}`);
@@ -134,7 +134,7 @@ export default function EditPet() {
     setRequestError("");
 
     try {
-      await api.requestPetLink(
+      await api.kennel.requestPetLink(
         Number(selectedKennelId),
         Number(id),
         `Please verify that ${form.name} was born/registered in your kennel.`

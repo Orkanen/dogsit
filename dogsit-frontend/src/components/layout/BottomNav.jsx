@@ -34,6 +34,13 @@ export default function BottomNav() {
         Kennels
       </NavLink>
 
+      <NavLink
+        to="/clubs"
+        className={() => `bottom-nav__item ${isActive("/clubs") ? "bottom-nav__item--active" : ""}`}
+      >
+        Club
+      </NavLink>
+
       {/* Auth-dependent */}
       {user ? (
         <>

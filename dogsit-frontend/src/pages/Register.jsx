@@ -46,7 +46,7 @@ export default function Register() {
 
     setLoading(true);
     try {
-      await api.register(form.email, form.password, form.roleNames);
+      await api.auth.register(form.email, form.password, form.roleNames);
       alert('Account created! Please log in.');
       navigate('/login');
     } catch (err) {

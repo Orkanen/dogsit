@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import "@/styles/pages/_kennel-detail.scss";
+import RequestJoinModal from "@/components/ui/RequestJoinModal";
 import api from "@/api";
 
 
@@ -14,47 +15,51 @@ export default function KennelDetail() {
   const [isOwner, setIsOwner] = useState(false);
   const [isMember, setIsMember] = useState(false);
 
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalState, setModalState] = useState("idle");
+  const [modalMessage, setModalMessage] = useState("");
+
   useEffect(() => {
     const loadKennel = async () => {
       try {
-        // 1. Public data — this must always succeed
-        const publicKennel = await api.getKennelById(id);
+        const publicKennel = await api.kennel.getKennelById(id);
         setKennel(publicKennel);
 
-        // 2. If logged in → silently check membership (401/403 = normal, not an error)
         if (user) {
-          const myKennels = await api.getMyKennels(); // ← returns [] on auth issues (perfect)
+          const myKennels = await api.kennel.getMyKennels().catch(() => []);
           const membership = myKennels.find(k => k.id === parseInt(id));
-
           if (membership) {
             setIsMember(true);
             setIsOwner(membership.myRole === "OWNER");
           }
-          // No else → being non-member is NOT an error → stay silent
         }
       } catch (err) {
-        // Only real errors reach here: network down, 500, malformed response
         console.error("[KennelDetail] Failed to load kennel:", err);
       } finally {
         setLoading(false);
       }
     };
-
     loadKennel();
   }, [id, user]);
 
-  if (loading) {
-    return <div className="kennel-detail__loading">Loading kennel...</div>;
-  }
+  const handleJoinRequest = async () => {
+    setModalState("loading");
+    setModalMessage("");
+    setModalOpen(true);
 
-  if (!kennel) {
-    return (
-      <div className="kennel-detail__error">
-        <p>Kennel not found</p>
-        <Link to="/kennel" className="kennel-detail__back">← Back to All Kennels</Link>
-      </div>
-    );
-  }
+    try {
+      await api.kennel.requestKennelMembership(id);
+      setModalState("success");
+      setTimeout(() => setModalOpen(false), 4000);
+    } catch (err) {
+      setModalState("error");
+      setModalMessage(err.message || "Something went wrong. Please try again.");
+    }
+  };
+
+  if (loading) return <div className="kennel-detail__loading">Loading kennel...</div>;
+  if (!kennel) return <div className="kennel-detail__error">Kennel not found</div>;
 
   return (
     <article className="kennel-detail">
@@ -85,7 +90,7 @@ export default function KennelDetail() {
       {/* Action buttons */}
       {!isMember && user && (
         <button
-          onClick={() => api.requestKennelMembership(id)}
+          onClick={() => api.kennel.requestKennelMembership(id)}
           className="kennel-detail__join-btn"
         >
           Request to Join Kennel
@@ -105,6 +110,14 @@ export default function KennelDetail() {
         Go to Dashboard →
       </Link>
     )}
+
+    {/* MODAL */}
+      <RequestJoinModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        state={modalState}
+        message={modalMessage}
+      />
     </article>
   );
 }

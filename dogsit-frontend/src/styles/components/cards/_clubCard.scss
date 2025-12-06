@@ -1,0 +1,55 @@
+.club-card {
+    background: white;
+    border-radius: 20px;
+    padding: 1.75rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+  
+    &:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(124, 58, 237, 0.15);
+      border-color: #7c3aed;
+    }
+  
+    &__header {
+      margin-bottom: 1rem;
+    }
+  
+    &__name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #5b21b6;
+      margin: 0;
+    }
+  
+    &__meta {
+      color: #7c3aed;
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-top: 0.5rem;
+    }
+  
+    &__stats {
+      color: #4c1d95;
+      font-weight: 600;
+      margin: 1rem 0;
+    }
+  
+    &__link {
+      display: block;
+      text-align: center;
+      background: linear-gradient(135deg, #7c3aed, #5b21b6);
+      color: white;
+      padding: 0.75rem;
+      border-radius: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+  
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(124, 58, 237, 0.3);
+      }
+    }
+  }

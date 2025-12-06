@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import api from "../api/index";
+import api from "@/api";
 import { useAuth } from "../context/AuthContext";
 import "@/styles/pages/_chatList.scss";
 
@@ -12,7 +12,7 @@ export default function ChatList() {
   useEffect(() => {
     const loadChats = async () => {
       try {
-        const matches = await api.getMatches();
+        const matches = await api.match.getMatches();
         const accepted = [...matches.sent, ...matches.received].filter(
           (m) => m.status === "ACCEPTED"
         );

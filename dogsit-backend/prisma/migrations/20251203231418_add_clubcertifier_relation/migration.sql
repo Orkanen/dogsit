@@ -74,7 +74,7 @@ CREATE TABLE `Kennel` (
 CREATE TABLE `KennelMember` (
     `kennelId` INTEGER NOT NULL,
     `userId` INTEGER NOT NULL,
-    `role` VARCHAR(191) NOT NULL,
+    `role` ENUM('OWNER', 'EMPLOYEE', 'MEMBER') NOT NULL DEFAULT 'MEMBER',
 
     INDEX `KennelMember_kennelId_idx`(`kennelId`),
     INDEX `KennelMember_userId_idx`(`userId`),
@@ -137,18 +137,21 @@ CREATE TABLE `Image` (
 -- CreateTable
 CREATE TABLE `Award` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `type` ENUM('CERTIFICATE', 'REWARD', 'PRICE', 'DIPLOMA') NOT NULL,
+    `type` ENUM('CERTIFICATE', 'REWARD', 'PRIZE', 'DIPLOMA') NOT NULL,
     `name` VARCHAR(191) NOT NULL,
     `isOfficial` BOOLEAN NOT NULL DEFAULT false,
     `isClaimable` BOOLEAN NOT NULL DEFAULT false,
     `issuerId` INTEGER NOT NULL,
     `clubId` INTEGER NULL,
+    `competitionId` INTEGER NULL,
     `claimedByUserId` INTEGER NULL,
     `petId` INTEGER NULL,
     `kennelId` INTEGER NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
+    INDEX `Award_clubId_idx`(`clubId`),
+    INDEX `Award_competitionId_idx`(`competitionId`),
     UNIQUE INDEX `Award_name_kennelId_key`(`name`, `kennelId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -179,10 +182,30 @@ CREATE TABLE `Club` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `ClubCertifier` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `clubId` INTEGER NOT NULL,
+    `userId` INTEGER NOT NULL,
+    `grantedById` INTEGER NULL,
+    `status` ENUM('PENDING', 'APPROVED', 'REJECTED', 'REVOKED') NOT NULL DEFAULT 'PENDING',
+    `requestedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `processedAt` DATETIME(3) NULL,
+    `processedByAdminId` INTEGER NULL,
+    `notes` VARCHAR(191) NULL,
+
+    INDEX `ClubCertifier_status_idx`(`status`),
+    INDEX `ClubCertifier_processedByAdminId_idx`(`processedByAdminId`),
+    UNIQUE INDEX `ClubCertifier_clubId_userId_key`(`clubId`, `userId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `ClubMember` (
     `clubId` INTEGER NOT NULL,
     `userId` INTEGER NOT NULL,
     `status` VARCHAR(191) NOT NULL DEFAULT 'PENDING',
+    `role` ENUM('OWNER', 'EMPLOYEE', 'MEMBER') NOT NULL DEFAULT 'MEMBER',
+    `joinedAt` DATETIME(3) NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     PRIMARY KEY (`clubId`, `userId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -263,7 +286,7 @@ CREATE TABLE `Course` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `title` VARCHAR(191) NOT NULL,
     `description` VARCHAR(191) NULL,
-    `issuerType` VARCHAR(191) NOT NULL,
+    `issuerType` ENUM('KENNEL', 'CLUB') NOT NULL,
     `kennelId` INTEGER NULL,
     `clubId` INTEGER NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -271,6 +294,37 @@ CREATE TABLE `Course` (
     INDEX `Course_issuerType_idx`(`issuerType`),
     INDEX `Course_kennelId_idx`(`kennelId`),
     INDEX `Course_clubId_idx`(`clubId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `CourseCertifierAssignment` (
+    `courseId` INTEGER NOT NULL,
+    `userId` INTEGER NOT NULL,
+    `assignedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `role` VARCHAR(191) NULL,
+
+    INDEX `CourseCertifierAssignment_courseId_idx`(`courseId`),
+    INDEX `CourseCertifierAssignment_userId_idx`(`userId`),
+    PRIMARY KEY (`courseId`, `userId`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `CourseEnrollment` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `courseId` INTEGER NOT NULL,
+    `userId` INTEGER NULL,
+    `petId` INTEGER NULL,
+    `status` ENUM('APPLIED', 'APPROVED', 'REJECTED', 'CANCELLED') NOT NULL DEFAULT 'APPLIED',
+    `appliedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `processedAt` DATETIME(3) NULL,
+    `processedBy` INTEGER NULL,
+    `notes` VARCHAR(191) NULL,
+
+    INDEX `CourseEnrollment_courseId_idx`(`courseId`),
+    INDEX `CourseEnrollment_status_idx`(`status`),
+    UNIQUE INDEX `CourseEnrollment_courseId_userId_key`(`courseId`, `userId`),
+    UNIQUE INDEX `CourseEnrollment_courseId_petId_key`(`courseId`, `petId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -287,6 +341,8 @@ CREATE TABLE `Certification` (
     `issuedAt` DATETIME(3) NULL,
     `revokedAt` DATETIME(3) NULL,
     `notes` TEXT NULL,
+    `verifiedByCertifierId` INTEGER NULL,
+    `verifiedByUserId` INTEGER NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -295,8 +351,104 @@ CREATE TABLE `Certification` (
     INDEX `Certification_petId_idx`(`petId`),
     INDEX `Certification_issuingKennelId_idx`(`issuingKennelId`),
     INDEX `Certification_issuingClubId_idx`(`issuingClubId`),
+    INDEX `Certification_verifiedByCertifierId_idx`(`verifiedByCertifierId`),
+    INDEX `Certification_verifiedByUserId_idx`(`verifiedByUserId`),
     UNIQUE INDEX `Certification_courseId_petId_key`(`courseId`, `petId`),
     UNIQUE INDEX `Certification_courseId_userId_key`(`courseId`, `userId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Competition` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `title` VARCHAR(191) NOT NULL,
+    `description` VARCHAR(191) NULL,
+    `issuerType` ENUM('KENNEL', 'CLUB') NOT NULL,
+    `kennelId` INTEGER NULL,
+    `clubId` INTEGER NULL,
+    `certifierId` INTEGER NULL,
+    `startAt` DATETIME(3) NULL,
+    `endAt` DATETIME(3) NULL,
+    `status` ENUM('SCHEDULED', 'ONGOING', 'COMPLETED', 'CANCELLED') NOT NULL DEFAULT 'SCHEDULED',
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `Competition_issuerType_idx`(`issuerType`),
+    INDEX `Competition_kennelId_idx`(`kennelId`),
+    INDEX `Competition_clubId_idx`(`clubId`),
+    INDEX `Competition_status_idx`(`status`),
+    INDEX `Competition_certifierId_idx`(`certifierId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `CompetitionAllowedAwarder` (
+    `competitionId` INTEGER NOT NULL,
+    `userId` INTEGER NOT NULL,
+    `nominatedById` INTEGER NULL,
+    `status` ENUM('PENDING', 'ACCEPTED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
+    `nominatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `processedAt` DATETIME(3) NULL,
+    `processedById` INTEGER NULL,
+    `notes` VARCHAR(191) NULL,
+
+    INDEX `CompetitionAllowedAwarder_competitionId_idx`(`competitionId`),
+    INDEX `CompetitionAllowedAwarder_userId_idx`(`userId`),
+    PRIMARY KEY (`competitionId`, `userId`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `CompetitionEntry` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `competitionId` INTEGER NOT NULL,
+    `userId` INTEGER NULL,
+    `petId` INTEGER NULL,
+    `kennelId` INTEGER NULL,
+    `status` ENUM('PENDING', 'ACCEPTED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
+    `score` DOUBLE NULL,
+    `placement` INTEGER NULL,
+    `notes` VARCHAR(191) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `CompetitionEntry_competitionId_idx`(`competitionId`),
+    INDEX `CompetitionEntry_status_idx`(`status`),
+    UNIQUE INDEX `CompetitionEntry_competitionId_petId_key`(`competitionId`, `petId`),
+    UNIQUE INDEX `CompetitionEntry_competitionId_userId_key`(`competitionId`, `userId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `CompetitionAward` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `competitionId` INTEGER NOT NULL,
+    `awardId` INTEGER NOT NULL,
+    `entryId` INTEGER NULL,
+    `awardedByUserId` INTEGER NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `CompetitionAward_competitionId_idx`(`competitionId`),
+    INDEX `CompetitionAward_entryId_idx`(`entryId`),
+    INDEX `CompetitionAward_awardedByUserId_idx`(`awardedByUserId`),
+    UNIQUE INDEX `CompetitionAward_competitionId_awardId_key`(`competitionId`, `awardId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `UserCertificateSubmission` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `userId` INTEGER NOT NULL,
+    `courseId` INTEGER NULL,
+    `petId` INTEGER NULL,
+    `certificateUrl` VARCHAR(1000) NULL,
+    `notes` TEXT NULL,
+    `status` ENUM('PENDING', 'ACCEPTED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
+    `submittedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `processedAt` DATETIME(3) NULL,
+    `processedById` INTEGER NULL,
+
+    INDEX `UserCertificateSubmission_userId_idx`(`userId`),
+    INDEX `UserCertificateSubmission_courseId_idx`(`courseId`),
+    INDEX `UserCertificateSubmission_petId_idx`(`petId`),
+    INDEX `UserCertificateSubmission_status_idx`(`status`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -361,6 +513,9 @@ ALTER TABLE `Award` ADD CONSTRAINT `Award_issuerId_fkey` FOREIGN KEY (`issuerId`
 ALTER TABLE `Award` ADD CONSTRAINT `Award_clubId_fkey` FOREIGN KEY (`clubId`) REFERENCES `Club`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `Award` ADD CONSTRAINT `Award_competitionId_fkey` FOREIGN KEY (`competitionId`) REFERENCES `Competition`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `Award` ADD CONSTRAINT `Award_claimedByUserId_fkey` FOREIGN KEY (`claimedByUserId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -374,6 +529,18 @@ ALTER TABLE `Message` ADD CONSTRAINT `Message_matchId_fkey` FOREIGN KEY (`matchI
 
 -- AddForeignKey
 ALTER TABLE `Message` ADD CONSTRAINT `Message_senderId_fkey` FOREIGN KEY (`senderId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ClubCertifier` ADD CONSTRAINT `ClubCertifier_clubId_fkey` FOREIGN KEY (`clubId`) REFERENCES `Club`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ClubCertifier` ADD CONSTRAINT `ClubCertifier_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ClubCertifier` ADD CONSTRAINT `ClubCertifier_grantedById_fkey` FOREIGN KEY (`grantedById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ClubCertifier` ADD CONSTRAINT `ClubCertifier_processedByAdminId_fkey` FOREIGN KEY (`processedByAdminId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `ClubMember` ADD CONSTRAINT `ClubMember_clubId_fkey` FOREIGN KEY (`clubId`) REFERENCES `Club`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -412,6 +579,27 @@ ALTER TABLE `Course` ADD CONSTRAINT `Course_kennelId_fkey` FOREIGN KEY (`kennelI
 ALTER TABLE `Course` ADD CONSTRAINT `Course_clubId_fkey` FOREIGN KEY (`clubId`) REFERENCES `Club`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `CourseCertifierAssignment` ADD CONSTRAINT `CourseCertifierAssignment_courseId_fkey` FOREIGN KEY (`courseId`) REFERENCES `Course`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CourseCertifierAssignment` ADD CONSTRAINT `CourseCertifierAssignment_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CourseEnrollment` ADD CONSTRAINT `CourseEnrollment_courseId_fkey` FOREIGN KEY (`courseId`) REFERENCES `Course`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CourseEnrollment` ADD CONSTRAINT `CourseEnrollment_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CourseEnrollment` ADD CONSTRAINT `CourseEnrollment_petId_fkey` FOREIGN KEY (`petId`) REFERENCES `Pet`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Certification` ADD CONSTRAINT `Certification_verifiedByCertifierId_fkey` FOREIGN KEY (`verifiedByCertifierId`) REFERENCES `ClubCertifier`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Certification` ADD CONSTRAINT `Certification_verifiedByUserId_fkey` FOREIGN KEY (`verifiedByUserId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `Certification` ADD CONSTRAINT `Certification_courseId_fkey` FOREIGN KEY (`courseId`) REFERENCES `Course`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -425,3 +613,54 @@ ALTER TABLE `Certification` ADD CONSTRAINT `Certification_issuingKennelId_fkey` 
 
 -- AddForeignKey
 ALTER TABLE `Certification` ADD CONSTRAINT `Certification_issuingClubId_fkey` FOREIGN KEY (`issuingClubId`) REFERENCES `Club`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Competition` ADD CONSTRAINT `Competition_kennelId_fkey` FOREIGN KEY (`kennelId`) REFERENCES `Kennel`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Competition` ADD CONSTRAINT `Competition_clubId_fkey` FOREIGN KEY (`clubId`) REFERENCES `Club`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Competition` ADD CONSTRAINT `Competition_certifierId_fkey` FOREIGN KEY (`certifierId`) REFERENCES `ClubCertifier`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CompetitionAllowedAwarder` ADD CONSTRAINT `CompetitionAllowedAwarder_competitionId_fkey` FOREIGN KEY (`competitionId`) REFERENCES `Competition`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CompetitionAllowedAwarder` ADD CONSTRAINT `CompetitionAllowedAwarder_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CompetitionAllowedAwarder` ADD CONSTRAINT `CompetitionAllowedAwarder_nominatedById_fkey` FOREIGN KEY (`nominatedById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CompetitionAllowedAwarder` ADD CONSTRAINT `CompetitionAllowedAwarder_processedById_fkey` FOREIGN KEY (`processedById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CompetitionEntry` ADD CONSTRAINT `CompetitionEntry_competitionId_fkey` FOREIGN KEY (`competitionId`) REFERENCES `Competition`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CompetitionEntry` ADD CONSTRAINT `CompetitionEntry_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CompetitionEntry` ADD CONSTRAINT `CompetitionEntry_petId_fkey` FOREIGN KEY (`petId`) REFERENCES `Pet`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CompetitionEntry` ADD CONSTRAINT `CompetitionEntry_kennelId_fkey` FOREIGN KEY (`kennelId`) REFERENCES `Kennel`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CompetitionAward` ADD CONSTRAINT `CompetitionAward_competitionId_fkey` FOREIGN KEY (`competitionId`) REFERENCES `Competition`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CompetitionAward` ADD CONSTRAINT `CompetitionAward_awardId_fkey` FOREIGN KEY (`awardId`) REFERENCES `Award`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CompetitionAward` ADD CONSTRAINT `CompetitionAward_entryId_fkey` FOREIGN KEY (`entryId`) REFERENCES `CompetitionEntry`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CompetitionAward` ADD CONSTRAINT `CompetitionAward_awardedByUserId_fkey` FOREIGN KEY (`awardedByUserId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `UserCertificateSubmission` ADD CONSTRAINT `UserCertificateSubmission_processedById_fkey` FOREIGN KEY (`processedById`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `UserCertificateSubmission` ADD CONSTRAINT `UserCertificateSubmission_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import api from "../api/index";
+import api from "@/api";
 import { useAuth } from "../context/AuthContext";
 import "@/styles/pages/_sitter-public.scss";
 
@@ -18,7 +18,7 @@ export default function SitterPublicProfile() {
   useEffect(() => {
     const load = async () => {
       try {
-        const data = await api.getSitterById(id);
+        const data = await api.sitter.getSitterById(id);
         console.log("Sitter data:", data);
         setSitter(data);
       } catch (err) {
@@ -41,7 +41,7 @@ export default function SitterPublicProfile() {
       return;
     }
     try {
-      await api.createMatch(sitter.id);
+      await api.match.createMatch(sitter.id);
       alert("Request sent! Check your matches.");
       navigate("/matches");
     } catch (e) {

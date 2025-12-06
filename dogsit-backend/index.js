@@ -1,5 +1,5 @@
-require('dotenv').config({ path: './.env' });
 const express = require('express');
+require('dotenv').config({ path: './.env' });
 const http = require('http');
 const cors = require('cors');
 const { Server } = require('socket.io');
@@ -16,12 +16,19 @@ const petRouter = require("./routes/pet");
 const imageRouter = require("./routes/image");
 const certificationRouter = require("./routes/certifications");
 const coursesRouter = require("./routes/courses");
+const enrollmentsRouter = require("./routes/enrollments");
+const clubCertifierRouter = require("./routes/clubCertifier");
+const competitionRouter = require("./routes/competitions");
+const clubRouter = require("./routes/clubs");
+const meRouter = require("./routes/me");
+// new admin certificate paperwork router
+const adminCertificateRouter = require("./routes/adminCertificates");
 
 const app = express();
-const server = http.createServer(app); // ← Use this instead of app
+const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173", // Vite dev server
+    origin: "http://localhost:5173",
     methods: ["GET", "POST"]
   }
 });
@@ -31,9 +38,19 @@ const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+// Capture raw body for debugging JSON parse issues
+app.use(express.json({
+  verify: (req, _res, buf) => {
+    // store raw body for error diagnostics
+    try {
+      req.rawBody = buf && buf.toString ? buf.toString() : '';
+    } catch (e) {
+      req.rawBody = '';
+    }
+  }
+}));
 
-// === ROUTES ===
+// Routes
 app.get('/api/users', async (req, res) => {
   try {
     const data = await prisma.user.findMany();
@@ -55,6 +72,24 @@ app.use("/pets", petRouter);
 app.use("/images", imageRouter);
 app.use("/certifications", certificationRouter);
 app.use("/courses", coursesRouter);
+app.use("/enrollment", enrollmentsRouter);
+app.use("/club-certifier", clubCertifierRouter);
+app.use("/club", clubRouter);
+app.use("/competition", competitionRouter);
+app.use("/me", meRouter);
+// mount admin certificate paperwork router
+app.use("/admin/certificate-paperwork", adminCertificateRouter);
+
+// JSON parse error handler: logs raw body to help debug malformed JSON
+app.use((err, req, res, next) => {
+  if (err && (err.type === 'entity.parse.failed' || err instanceof SyntaxError)) {
+    console.error('JSON parse error:', err.message);
+    console.error('Raw request body:', req.rawBody ? req.rawBody : '<no raw body captured>');
+    return res.status(400).json({ error: 'Malformed JSON in request body', details: err.message });
+  }
+  // pass on to default error handler
+  next(err);
+});
 
 // === SOCKET.IO AUTH & CHAT LOGIC ===
 io.use(async (socket, next) => {

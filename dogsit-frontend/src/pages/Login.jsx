@@ -12,29 +12,26 @@ export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
   const from = location.state?.from?.pathname || '/'
-  const { login } = useAuth()
+  const { login } = useAuth();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
-
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+  
     try {
-      const data = await api.login(form.email, form.password)
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('user', JSON.stringify(data.user))
-      login(data.token, data.user)
-      navigate(from, { replace: true })
+      await login(form.email, form.password);
+      navigate(from, { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Login failed')
+      setError(err.message || 'Login failed');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="login-page">

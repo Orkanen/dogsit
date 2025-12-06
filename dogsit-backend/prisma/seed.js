@@ -1,13 +1,16 @@
+// prisma/seed.js
 const { PrismaClient } = require('@prisma/client');
-const bcrypt = require('bcrypt');
-
 const prisma = new PrismaClient();
 
-async function main() {
-  console.log('Starting seed...');
+async function log(msg) {
+  console.log(`[Seed] ${msg}`);
+}
 
-  // 1. Roles
-  const roleNames = ['owner', 'sitter', 'kennel', 'admin', 'certifier'];
+async function main() {
+  log("Starting seed...");
+
+  // 1. Roles (now uses PascalCase table "Role")
+  const roleNames = ["owner", "sitter", "kennel", "admin", "certifier"];
   for (const name of roleNames) {
     await prisma.role.upsert({
       where: { name },
@@ -15,17 +18,10 @@ async function main() {
       create: { name },
     });
   }
-  console.log('Roles seeded');
+  log("Roles seeded");
 
-  // 2. Services (common ones)
-  const services = [
-    'Overnight',
-    'Daycare',
-    'Walking',
-    'Grooming',
-    'Training',
-    'House sitting',
-  ];
+  // 2. Services (if you still have them)
+  const services = ["Overnight", "Walking", "Grooming", "Training", "Daycare"];
   for (const name of services) {
     await prisma.service.upsert({
       where: { name },
@@ -33,83 +29,94 @@ async function main() {
       create: { name },
     });
   }
-  console.log('Services seeded');
+  log("Services seeded");
 
-  // 3. Test users
-  const sitterPassword = await bcrypt.hash('password123', 10);
-
-  await prisma.user.upsert({
-    where: { email: 'sitter1@example.com' },
+  // 3. Create a test admin user (optional but useful)
+  const admin = await prisma.user.upsert({
+    where: { email: "admin@dogsit.com" },
     update: {},
     create: {
-      email: 'sitter1@example.com',
-      password: sitterPassword,
-      profile: {
-        create: {
-          firstName: 'Erik',
-          lastName: 'Svensson',
-          location: 'Gothenburg',
-          pricePerDay: 450,
-          publicEmail: 'erik@doglover.se',
-          sitterDescription: 'Experienced sitter with big garden, loves all breeds!',
-          availability: {
-            create: [
-              { period: 'MORNING' },
-              { period: 'DAY' },
-              { period: 'NIGHT' },
-            ],
-          },
-          services: {
-            create: [
-              { service: { connect: { name: 'Overnight' } } },
-              { service: { connect: { name: 'Walking' } } },
-              { service: { connect: { name: 'Daycare' } } },
-            ],
-          },
-          breedExperience: {
-            create: [
-              { breed: 'Golden Retriever' },
-              { breed: 'Labrador' },
-              { breed: 'French Bulldog' },
-            ],
-          },
-        },
-      },
-      roles: {
-        create: [{ role: { connect: { name: 'sitter' } } }],
-      },
+      email: "admin@dogsit.com",
+      password: "$2b$10$ThisIsAHashedPassword123", // use your real hash or change later
     },
   });
 
-  await prisma.user.upsert({
-    where: { email: 'owner1@example.com' },
+  await prisma.userRole.upsert({
+    where: { userId_roleId: { userId: admin.id, roleId: (await prisma.role.findUnique({ where: { name: "admin" } })).id } },
     update: {},
     create: {
-      email: 'owner1@example.com',
-      password: sitterPassword,
-      profile: {
-        create: {
-          firstName: 'Anna',
-          lastName: 'Larsson',
-          location: 'Stockholm',
-        },
-      },
-      roles: {
-        create: [{ role: { connect: { name: 'owner' } } }],
-      },
+      userId: admin.id,
+      roleId: (await prisma.role.findUnique({ where: { name: "admin" } })).id,
+    },
+  });
+  log("Admin user ready");
+
+  // 4. Example club + owner + approved certifier + course
+  const club = await prisma.club.upsert({
+    where: { name: "Downtown Dog Club" },
+    update: {},
+    create: { name: "Downtown Dog Club", membershipType: "OPEN" },
+  });
+
+  const owner = await prisma.user.upsert({
+    where: { email: "owner@dogsit.com" },
+    update: {},
+    create: { email: "owner@dogsit.com", password: "hashed" },
+  });
+
+  await prisma.clubMember.upsert({
+    where: { clubId_userId: { clubId: club.id, userId: owner.id } },
+    update: { role: "OWNER" },
+    create: { clubId: club.id, userId: owner.id, role: "OWNER", status: "ACCEPTED" },
+  });
+
+  // Create an approved certifier
+  const certifierUser = await prisma.user.upsert({
+    where: { email: "certifier@dogsit.com" },
+    update: {},
+    create: { email: "certifier@dogsit.com", password: "hashed" },
+  });
+
+  await prisma.clubMember.upsert({
+    where: { clubId_userId: { clubId: club.id, userId: certifierUser.id } },
+    update: {},
+    create: { clubId: club.id, userId: certifierUser.id, role: "EMPLOYEE", status: "ACCEPTED" },
+  });
+
+  const clubCertifier = await prisma.clubCertifier.upsert({
+    where: { clubId_userId: { clubId: club.id, userId: certifierUser.id } },
+    update: { status: "APPROVED", processedByAdminId: admin.id },
+    create: {
+      clubId: club.id,
+      userId: certifierUser.id,
+      grantedById: owner.id,
+      status: "APPROVED",
+      processedByAdminId: admin.id,
     },
   });
 
-  console.log('Test users seeded');
+  // Create a course with the approved certifier
+  await prisma.course.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      title: "Basic Obedience Level 1",
+      description: "8-week beginner obedience course",
+      issuerType: "CLUB",
+      clubId: club.id,
+      certifierId: clubCertifier.id,
+    },
+  });
+
+  log("Sample club, certifier, and course created");
+  log("Seed completed successfully!");
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-    console.log('Seed completed successfully!');
-  })
-  .catch(async (e) => {
-    console.error('Seed failed:', e);
-    await prisma.$disconnect();
+  .catch((e) => {
+    console.error("Seed failed:", e);
     process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
   });

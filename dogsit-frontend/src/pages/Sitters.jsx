@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import api from "../api/index";
+import api from "@/api";
 import "@/styles/pages/_sitters.scss";
 
 export default function Sitters() {
@@ -20,8 +20,8 @@ export default function Sitters() {
       try {
         setLoading(true);
         const [sittersData, matchesData] = await Promise.all([
-          api.getSitters(),
-          isOwner ? api.getMatches() : Promise.resolve({ sent: [], received: [] }),
+          api.sitter.getSitters(),
+          isOwner ? api.match.getMatches() : Promise.resolve({ sent: [], received: [] }),
         ]);
 
         const filtered = sittersData.filter((s) => s.id !== user?.id);
@@ -42,7 +42,7 @@ export default function Sitters() {
       return;
     }
     try {
-      await api.createMatch(sitterId);
+      await api.match.createMatch(sitterId);
       alert("Request sent successfully!");
       navigate("/matches");
     } catch (e) {

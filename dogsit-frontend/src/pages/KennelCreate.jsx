@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../api/index";
+import api from "@/api";
 
 export default function KennelCreate() {
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ export default function KennelCreate() {
   
     setLoading(true);
     try {
-      const kennel = await api.createKennel({
+      const kennel = await api.kennel.createKennel({
         name: form.name.trim(),
         location: form.location.trim() || null,
       });

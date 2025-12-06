@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import api from "../api/index";
+import api from "@/api";
 import "@/styles/pages/_myPets.scss";
 
 export default function MyPets() {
@@ -15,7 +15,7 @@ export default function MyPets() {
 
     const fetchPets = async () => {
       try {
-        const data = await api.getMyPets();
+        const data = await api.pet.getMyPets();
         setPets(data);
       } catch (err) {
         setError(err.message || "Failed to load pets");

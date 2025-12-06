@@ -1,26 +1,16 @@
-const API_BASE = import.meta.env.VITE_API_BASE
-
-const handleResponse = async (res) => {
-    const data = await res.json()
-    if (!res.ok) {
-        throw new Error(data.error || data.message || 'Request failed')
-    }
-    return data
-}
+import fetchPublic from "./fetchPublic";
 
 const sitterApi = {
-    // SITTERS
-    getSitters: () =>
-    fetch(`${API_BASE}/sitters`, {
-      headers: { "Content-Type": "application/json" }
-    }).then(handleResponse),
+  // ← PUBLIC — async so you can await it
+  getSitters: async () => {
+    const res = await fetchPublic("/sitters");
+    return res; // or res.sitters if your backend wraps it
+  },
 
-    getSitterById: (id) =>
-    fetch(`${API_BASE}/sitters/${id}`, {
-      headers: { "Content-Type": "application/json" },
-    }).then(handleResponse),
-}
+  getSitterById: async (id) => {
+    const res = await fetchPublic(`/sitters/${id}`);
+    return res;
+  },
+};
 
-
-
-export default sitterApi
+export default sitterApi;

@@ -22,9 +22,9 @@ export default function MyPetProfile() {
     const fetchData = async () => {
       try {
         const [petData, allKennels, requests] = await Promise.all([
-          api.getPet(id),
-          api.getKennels(),
-          api.getKennelRequests?.() || [], // fallback if not available
+          api.pet.getPet(id),
+          api.kennel.getKennels(),
+          api.kennel.getKennelRequests?.() || [], // fallback if not available
         ]);
 
         if (petData.ownerId !== user.id) {
@@ -61,7 +61,7 @@ export default function MyPetProfile() {
     setRequestLoading(true);
     try {
       // Use the exact same method as EditPet
-      await api.requestPetLink(
+      await api.kennel.requestPetLink(
         Number(selectedKennelId),
         Number(id),
         `Please verify that ${pet.name} was born/registered in your kennel.`
@@ -79,7 +79,7 @@ export default function MyPetProfile() {
 
   const handleRemoveVerification = async () => {
     try {
-      await api.removePetVerification(pet.id);
+      await api.kennel.removePetVerification(pet.id);
       setPet(prev => ({ ...prev, kennelId: null }));
       setKennel(null);
       alert("Kennel verification removed.");

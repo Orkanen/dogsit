@@ -1,0 +1,189 @@
+// src/styles/pages/_clubs.scss
+@use "@/styles/abstracts/variables" as *;
+@use "sass:color"; // ← REQUIRED for color.adjust() and color.scale()
+
+.clubs-page {
+  min-height: 100vh;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+
+  &__main {
+    flex: 1;
+    padding: $spacing-8;
+    padding-bottom: $spacing-4;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  &__header {
+    text-align: center;
+    margin-bottom: $spacing-12;
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #1e293b;
+      margin-bottom: $spacing-4;
+    }
+
+    p {
+      font-size: 1.25rem;
+      color: #64748b;
+      max-width: 720px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: $spacing-6;
+    margin-bottom: $spacing-12;
+    padding: 0 $spacing-2;
+    box-sizing: border-box;
+  }
+
+  .club-card__wrapper {
+    border-radius: 1rem;
+    overflow: hidden;
+    height: fit-content;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+
+    &:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+  }
+
+  &__loading,
+  &__error,
+  &__empty {
+    text-align: center;
+    font-size: 1.25rem;
+    color: #64748b;
+    padding: $spacing-16;
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  &__error {
+    color: #dc2626;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+  }
+
+  &__empty {
+    max-width: 600px;
+    margin: 0 auto;
+    background: white;
+
+    h2 {
+      font-size: 2rem;
+      margin-bottom: $spacing-4;
+      color: #1e293b;
+    }
+
+    p {
+      font-size: 1.125rem;
+      color: #64748b;
+      margin-bottom: $spacing-8;
+    }
+  }
+
+  &__footer {
+    padding: $spacing-8 $spacing-4;
+    background: white;
+    border-top: 1px solid #e2e8f0;
+    text-align: center;
+    display: flex;
+    gap: $spacing-8;
+    justify-content: center;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+
+    a {
+      color: $primary;
+      font-weight: 600;
+      text-decoration: none;
+      padding: 0.5rem 0;
+      transition: color 0.2s;
+
+      &:hover {
+        text-decoration: underline;
+        // ← NEW SASS 3.0 SYNTAX (no more darken())
+        color: color.adjust($primary, $lightness: -10%);
+        // or even smoother:
+        // color: color.scale($primary, $lightness: -12%, $saturation: -8%);
+      }
+    }
+  }
+
+  // Responsive
+  @media (max-width: 768px) {
+    &__grid {
+      grid-template-columns: 1fr;
+      gap: $spacing-6;
+    }
+
+    &__main {
+      padding: $spacing-6 $spacing-4;
+    }
+
+    &__header h1 {
+      font-size: 2.25rem;
+    }
+  }
+
+  @media (max-width: 640px) {
+    &__footer {
+      flex-direction: column;
+      gap: $spacing-4;
+    }
+  }
+}
+
+// Optional skeleton (unchanged – no deprecated functions used)
+.club-skeleton {
+  animation: pulse 1.5s ease-in-out infinite;
+  border-radius: 1rem;
+  padding: $spacing-6;
+  background: white;
+  border: 1px solid #e2e8f0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  &__banner {
+    height: 160px;
+    background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+    border-radius: 0.75rem 0.75rem 0 0;
+  }
+
+  &__name {
+    height: 1.8rem;
+    width: 80%;
+    background: #e2e8f0;
+    border-radius: 0.5rem;
+    margin: $spacing-4 0 $spacing-3;
+  }
+
+  &__members {
+    height: 2.5rem;
+    width: 60%;
+    background: #e2e8f0;
+    border-radius: 0.5rem;
+    margin-top: auto;
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

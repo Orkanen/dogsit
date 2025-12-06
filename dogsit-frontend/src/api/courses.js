@@ -1,40 +1,32 @@
-const API_BASE = import.meta.env.VITE_API_BASE;
+import fetchPublic from "./fetchPublic";
+import fetchWithAuth from "./fetchWithAuth";
 
-const handleResponse = async (res) => {
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.error || data.message || "Request failed");
-  }
-  return data;
-};
-
-const getAuthHeaders = () => ({
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${localStorage.getItem("token")}`,
-});
+const API_BASE = import.meta.env.VITE_API_BASE || "";
 
 const coursesApi = {
-  // Get all courses user can see (for dashboard)
-  getMyCourses: () =>
-    fetch(`${API_BASE}/courses/my`, {
-      headers: getAuthHeaders(),
-    }).then(handleResponse),
+  getMyIssuableCourses: async () => {
+    return fetchWithAuth(`/club/my`, { method: "GET" });
+  },
 
-  // Create a new course (kennel/club owner)
-  createCourse: (data) =>
-    fetch(`${API_BASE}/courses`, {
+  createCourse: async (data) =>
+    fetchWithAuth(`/courses`, {
       method: "POST",
-      headers: getAuthHeaders(),
       body: JSON.stringify(data),
-    }).then(handleResponse),
+    }),
 
-  // Update course
-  updateCourse: (id, data) =>
-    fetch(`${API_BASE}/courses/${id}`, {
+  updateCourse: async (id, data) =>
+    fetchWithAuth(`/courses/${id}`, {
       method: "PATCH",
-      headers: getAuthHeaders(),
       body: JSON.stringify(data),
-    }).then(handleResponse),
+    }),
+
+  nominateCourseCertifier: (courseId, { userId, clubId } = {}) =>
+    fetchWithAuth(`/club-certifier`, {
+      method: "POST",
+      body: JSON.stringify({ clubId, userId, courseId }),
+    }),
+
+  deleteCourse: (id) => fetchWithAuth(`/courses/${id}`, { method: "DELETE" }),
 };
 
 export default coursesApi;

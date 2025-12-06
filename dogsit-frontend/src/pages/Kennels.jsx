@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "@/api";
 import KennelCard from "@/components/ui/cards/KennelCard";
 import "@/styles/pages/_kennels.scss";
@@ -7,39 +7,50 @@ import "@/styles/pages/_kennels.scss";
 export default function Kennels() {
   const [kennels, setKennels] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    api.getKennels()
-      .then(data => {
+    api.kennel.getKennels()
+      .then((data) => {
         const list = Array.isArray(data) ? data : data?.kennels || [];
         setKennels(list);
       })
-      .catch(() => setError('Failed to load kennels'))
+      .catch((err) => {
+        console.error("Failed to load kennels:", err);
+        setError("Unable to load kennels right now.");
+      })
       .finally(() => setLoading(false));
   }, []);
-
-  if (loading) return <div className="kennels-page__loading">Loading kennels…</div>;
-  if (error) return <div className="kennels-page__error">{error}</div>;
 
   return (
     <div className="kennels-page">
       <main className="kennels-page__main">
-        <div className="kennels-page__header">
+        <header className="kennels-page__header">
           <h1>Discover Kennels</h1>
-          <p>Browse kennels and their communities</p>
-        </div>
+          <p>Browse trusted kennels and their communities</p>
+        </header>
 
-        {kennels.length === 0 ? (
-          <p className="kennels-page__empty">No kennels found.</p>
-        ) : (
-        <div className="kennels-page__grid">
-          {kennels.map(kennel => (
-            <div key={kennel.id} className="kennel-card__wrapper">
-              <KennelCard kennel={kennel} />
-            </div>
-          ))}
-        </div>
+        {loading && <div className="kennels-page__loading">Loading kennels…</div>}
+        {error && <div className="kennels-page__error">{error}</div>}
+
+        {!loading && !error && kennels.length === 0 && (
+          <div className="kennels-page__empty">
+            <h2>No kennels yet</h2>
+            <p>Be the first to register one!</p>
+            <Link to="/kennel/create" className="btn btn--primary">
+              Register a Kennel
+            </Link>
+          </div>
+        )}
+
+        {!loading && !error && kennels.length > 0 && (
+          <div className="kennels-page__grid">
+            {kennels.map((kennel) => (
+              <div key={kennel.id} className="kennel-card__wrapper">
+                <KennelCard kennel={kennel} />
+              </div>
+            ))}
+          </div>
         )}
       </main>
 

@@ -1,0 +1,49 @@
+.club-page {
+  min-height: 100vh;
+  padding: 2rem 1rem;
+
+  &__loading,
+  &__error {
+    text-align: center;
+    padding: 6rem 1rem;
+    font-size: 1.5rem;
+  }
+
+  &__error-title {
+    color: #dc2626;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  &__header {
+    margin-bottom: 3rem;
+  }
+
+  &__status {
+    text-align: center;
+    margin-bottom: 3rem;
+    font-weight: 600;
+
+    &--owner { color: #7c3aed; }
+    &--employee { color: #2563eb; }
+    &--member { color: #16a34a; }
+    &--pending { color: #d97706; }
+  }
+
+  &__join,
+  &__dashboard-link {
+    text-align: center;
+    margin: 3rem 0;
+  }
+
+  &__footer {
+    margin-top: 4rem;
+    text-align: center;
+  }
+
+  &__back-link {
+    color: #3b82f6;
+    font-weight: 500;
+    &:hover { text-decoration: underline; }
+  }
+}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import api from "../api/index";
+import api from "@/api";
 import { useAuth } from "../context/AuthContext";
 import "@/styles/pages/_profile.scss";
 
@@ -15,8 +15,6 @@ export default function Profile() {
     lastName: "",
     bio: "",
     location: "",
-    dogBreed: "",
-    servicesOffered: "",
 
     availability: [],
     pricePerDay: "",
@@ -44,7 +42,7 @@ export default function Profile() {
 
     const load = async () => {
       try {
-        const data = await api.getProfile();
+        const data = await api.profile.getProfile();
         setProfile(data);
 
         const currentRoles = data.roles || [];
@@ -54,8 +52,6 @@ export default function Profile() {
           lastName: data.profile?.lastName || "",
           bio: data.profile?.bio || "",
           location: data.profile?.location || "",
-          dogBreed: data.profile?.dogBreed || "",
-          servicesOffered: data.profile?.servicesOffered || "",
 
           availability: Array.isArray(data.profile?.availability)
             ? data.profile.availability
@@ -112,13 +108,11 @@ export default function Profile() {
     setSaving(true);
 
     try {
-      await api.updateProfile({
+      await api.profile.updateProfile({
         firstName: form.firstName,
         lastName: form.lastName,
         bio: form.bio,
         location: form.location,
-        dogBreed: form.dogBreed,
-        servicesOffered: form.servicesOffered,
 
         availability: isSitter ? form.availability : [],
         pricePerDay: isSitter && form.pricePerDay ? Number(form.pricePerDay) : null,
@@ -127,7 +121,7 @@ export default function Profile() {
         sitterDescription: isSitter ? form.sitterDescription || null : null,
       });
 
-      await api.updateUserRoles(form.roles);
+      await api.profile.updateUserRoles(form.roles);
 
       alert("Profile saved beautifully!");
     } catch (err) {
@@ -169,8 +163,6 @@ export default function Profile() {
             <input name="lastName" placeholder="Last Name" value={form.lastName} onChange={handleChange} className="profile__input" />
             <textarea name="bio" placeholder="Tell us about yourself…" value={form.bio} onChange={handleChange} rows={4} className="profile__textarea" />
             <input name="location" placeholder="City / Area" value={form.location} onChange={handleChange} className="profile__input" />
-            <input name="dogBreed" placeholder="Your dog's breed (owner)" value={form.dogBreed} onChange={handleChange} className="profile__input" />
-            <input name="servicesOffered" placeholder="Services you offer (sitter)" value={form.servicesOffered} onChange={handleChange} className="profile__input" />
           </div>
 
           <div className="profile__roles-section">

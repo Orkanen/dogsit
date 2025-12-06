@@ -5,15 +5,33 @@ const { PrismaClient } = require('@prisma/client');
 
 const router = express.Router();
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 
 // REGISTER
 router.post("/register", async (req, res) => {
   try {
-    const { email, password, roleNames = [] } = req.body;
+    const rawEmail = req.body.email;
+    const { password } = req.body;
+    let { roleNames = [] } = req.body;
 
-    if (!email || !password || roleNames.length === 0)
-      return res.status(400).json({ error: "Email, password and roleNames[] required" });
+    if (!rawEmail || !password) {
+      return res.status(400).json({ error: "Email and password required" });
+    }
+
+    const email = String(rawEmail).trim().toLowerCase();
+    roleNames = Array.isArray(roleNames) && roleNames.length
+      ? roleNames.map(r => String(r).trim().toLowerCase())
+      : ["sitter"];
+
+    // Upsert roles
+    for (const roleName of roleNames) {
+      if (!roleName) continue;
+      await prisma.role.upsert({
+        where: { name: roleName },
+        update: {},
+        create: { name: roleName },
+      });
+    }
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) return res.status(409).json({ error: "User already exists" });
@@ -37,20 +55,42 @@ router.post("/register", async (req, res) => {
       }
     });
 
-    res.status(201).json({ message: "Registered", user });
+    const roles = user.roles.map(r => r.role.name);
+    const token = jwt.sign(
+      { id: user.id, email: user.email, roles },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.status(201).json({
+      message: "Registered successfully",
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        roles,
+        profile: user.profile
+      }
+    });
   } catch (error) {
     console.error("Registration error:", error);
+    if (error?.code === "P2002") {
+      return res.status(409).json({ error: "Email already in use" });
+    }
     res.status(500).json({ error: "Registration failed" });
   }
 });
 
-// LOGIN
+// LOGIN — CLEAN & SECURE
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email: rawEmail, password } = req.body;
 
-    if (!email || !password)
-      return res.status(400).json({ error: "Email and password are required" });
+    if (!rawEmail || !password) {
+      return res.status(400).json({ error: "Email and password required" });
+    }
+
+    const email = String(rawEmail).trim().toLowerCase();
 
     const user = await prisma.user.findUnique({
       where: { email },
@@ -60,23 +100,26 @@ router.post("/login", async (req, res) => {
       },
     });
 
-    if (!user) return res.status(401).json({ error: "Invalid credentials" });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
 
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) return res.status(401).json({ error: "Invalid credentials" });
-
-    const roleName = user.roles[0]?.role.name || "unknown";
-
+    const roles = user.roles.map(r => r.role.name);
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: roleName },
+      { id: user.id, email: user.email, roles },
       JWT_SECRET,
-      { expiresIn: "2h" }
+      { expiresIn: "7d" }
     );
 
     res.json({
       message: "Login successful",
       token,
-      user: { id: user.id, email: user.email, role: roleName }
+      user: {
+        id: user.id,
+        email: user.email,
+        roles,
+        profile: user.profile,
+      },
     });
   } catch (error) {
     console.error("Login error:", error);
