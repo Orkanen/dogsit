@@ -74,11 +74,11 @@ export default function CourseForm({ issuerType = "CLUB", issuerId = null, owned
         title: title.trim(),
         description: description.trim() || null,
         issuerType: "CLUB",
-        issuerId: Number(clubId),
+        clubId: Number(clubId),
         certifierUserId: certifierUserId ? Number(certifierUserId) : null,
       };
 
-      await api.courses.createCourse(payload);
+      await api.courses.create(payload);
       setMessage("Course created successfully!");
 
       if (onSave) await onSave();

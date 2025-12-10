@@ -9,7 +9,7 @@ export default function KennelVerificationRequest({ petId, currentKennelId, onSu
 
   const loadKennels = async () => {
     try {
-      const list = await api.getKennels();
+      const list = await api.kennel.getKennels();
       // Exclude the kennel the pet is already linked to
       setKennels(list.filter(k => k.id !== currentKennelId));
     } catch (err) {
@@ -24,7 +24,7 @@ export default function KennelVerificationRequest({ petId, currentKennelId, onSu
 
     try {
       setLoading(true);
-      await api.requestPetLink(Number(selectedKennel), petId, message.trim());
+      await api.kennels.requestPetLink(Number(selectedKennel), petId, message.trim());
       alert("Request sent! The kennel owner will review it.");
       onSuccess?.();
     } catch (err) {

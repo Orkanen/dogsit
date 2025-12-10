@@ -163,7 +163,6 @@ router.get("/:id", async (req, res) => {
       orderBy: { createdAt: "asc" },
       // include any course-level relations you do want here (kennel, club, enrollments, etc) — avoid non-existent relation names
       include: {
-        kennel: true,
         club: true,
         certifiers: true,
         certifications: true,

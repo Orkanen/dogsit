@@ -32,7 +32,7 @@ export default function ClubDashboard() {
         ...(data.requests?.entries || [])
       ]);
     } catch (err) {
-      console.error("Failed to load club empire", err);
+      console.error("Failed to load dashboard", err);
     } finally {
       setLoading(false);
     }
@@ -43,7 +43,10 @@ export default function ClubDashboard() {
   }, []);
 
   const isOwnerOf = (item) => {
-    return myClubs.some(club => club.id === item.clubId && club.myRole === "OWNER");
+    return myClubs.some(club => 
+      club.id === item.clubId && 
+      club.members?.some(m => m.userId === user?.id && m.role === "OWNER")
+    );
   };
 
   if (loading) return <div className="club-dashboard__loader">Loading your empire…</div>;

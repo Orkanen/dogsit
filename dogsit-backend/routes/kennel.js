@@ -433,6 +433,72 @@ router.post("/pet/:petId/remove-verification", authenticateToken, async (req, re
   }
 });
 
+router.get("/my/managed", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Find all kennels where user is OWNER or EMPLOYEE
+    const memberships = await prisma.kennelMember.findMany({
+      where: {
+        userId,
+        role: { in: ["OWNER", "EMPLOYEE"] },
+      },
+      include: {
+        kennel: {
+          include: {
+            pets: { select: { id: true } },
+            members: true,
+          },
+        },
+      },
+    });
+
+    const kennels = memberships.map(m => ({
+      ...m.kennel,
+      myRole: m.role,
+      memberCount: m.kennel.members.length,
+      dogCount: m.kennel.pets.length,
+    }));
+
+    const kennelIds = kennels.map(k => k.id);
+
+    let requests = [];
+    if (kennelIds.length > 0) {
+      const [petRequests, membershipRequests] = await Promise.all([
+        prisma.kennelPetRequest.findMany({
+          where: { kennelId: { in: kennelIds }, status: "PENDING" },
+          include: {
+            pet: {
+              include: {
+                images: { take: 1 },
+                owner: { include: { profile: true } },
+              },
+            },
+            kennel: true,
+          },
+        }),
+        prisma.kennelMembershipRequest.findMany({
+          where: { kennelId: { in: kennelIds }, status: "PENDING" },
+          include: {
+            user: { include: { profile: true } },
+            kennel: true,
+          },
+        }),
+      ]);
+
+      requests = [
+        ...petRequests.map(r => ({ ...r, type: "PET_LINK" })),
+        ...membershipRequests.map(r => ({ ...r, type: "MEMBERSHIP" })),
+      ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
+
+    res.json({ kennels, requests });
+  } catch (err) {
+    console.error("getManagedData error:", err);
+    res.status(500).json({ error: "Failed to load managed data" });
+  }
+});
+
 router.patch("/requests/:reqId/accept", authenticateToken, handleRequestResponse("ACCEPTED"));
 router.patch("/requests/:reqId/reject", authenticateToken, handleRequestResponse("REJECTED"));
 

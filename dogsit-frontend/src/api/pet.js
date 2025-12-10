@@ -3,27 +3,27 @@ import fetchWithAuth from "./fetchWithAuth";
 
 const petApi = {
   // PUBLIC
-  getPetById: (id) => fetchPublic(`/pet/${id}`),
+  getPetById: (id) => fetchPublic(`/pets/${id}`),
 
   // PROTECTED
   getMyPets: async () => {
-    const res = await fetchWithAuth("/pet/my");
-    return res; // or res.pets if you wrap it
+    const res = await fetchWithAuth("/pets/my");
+    return res;
   },
 
   createPet: (data) =>
-    fetchWithAuth("/pet", {
+    fetchWithAuth("/pets", {
       method: "POST",
       body: JSON.stringify(data),
     }),
 
   updatePet: (id, data) =>
-    fetchWithAuth(`/pet/${id}`, {
+    fetchWithAuth(`/pets/${id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
     }),
 
-  deletePet: (id) => fetchWithAuth(`/pet/${id}`, { method: "DELETE" }),
+  deletePet: (id) => fetchWithAuth(`/pets/${id}`, { method: "DELETE" }),
 };
 
 export default petApi;

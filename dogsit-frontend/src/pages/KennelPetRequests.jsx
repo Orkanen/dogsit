@@ -4,20 +4,22 @@ import api from "@/api";
 import "@/styles/pages/_kennelPetRequests.scss";
 
 export default function KennelPetRequests() {
-  const { requestId } = useParams(); // e.g. /kennel/requests/pet/123
+  const { requestId } = useParams();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.kennel.getKennelPetRequests()
-      .then(setRequests)
-      .catch(() => setRequests([]))
+    api.kennel.getRequests()
+      .then(all => {
+        const petRequests = all.filter(r => r.type === "PET_LINK" && r.status === "PENDING");
+        setRequests(petRequests);
+      })
       .finally(() => setLoading(false));
   }, []);
 
-  // Auto-scroll + highlight the specific request
+  // Auto-highlight requested card
   useEffect(() => {
-    if (requestId && !loading && requests.length > 0) {
+    if (requestId && !loading) {
       const el = document.getElementById(`request-${requestId}`);
       if (el) {
         el.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -27,21 +29,28 @@ export default function KennelPetRequests() {
     }
   }, [requestId, loading, requests]);
 
-  const handleRespond = async (requestId, status) => {
-    if (!confirm(`Are you sure you want to ${status.toLowerCase()} this request?`)) return;
-
+  const handleAccept = async (reqId) => {
+    if (!confirm("Accept this pet verification?")) return;
     try {
-      const updated = await api.kennel.acceptKennelRequest(requestId); // uses unified endpoint
-      if (status === "REJECTED") await api.kennel.rejectKennelRequest(requestId);
-
-      setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status } : r));
-      if (status === "ACCEPTED") alert("Pet officially linked to your kennel!");
-    } catch (err) {
-      alert("Failed: " + (err.message || "Unknown error"));
+      await api.kennel.acceptRequest(reqId);
+      setRequests(prev => prev.filter(r => r.id !== reqId));
+      alert("Pet verified and linked to your kennel!");
+    } catch {
+      alert("Failed to accept");
     }
   };
 
-  if (loading) return <div className="loader">Loading requests…</div>;
+  const handleReject = async (reqId) => {
+    if (!confirm("Reject this verification request?")) return;
+    try {
+      await api.kennel.rejectRequest(reqId);
+      setRequests(prev => prev.filter(r => r.id !== reqId));
+    } catch {
+      alert("Failed to reject");
+    }
+  };
+
+  if (loading) return <div className="loader">Loading verification requests…</div>;
 
   return (
     <section className="kennel-pet-requests">
@@ -50,75 +59,58 @@ export default function KennelPetRequests() {
         <Link to="/kennel/dashboard" className="back-link">← Back to Dashboard</Link>
       </header>
 
-      <p className="kennel-pet-requests__intro">
-        Owners asking you to confirm their dog was bred or registered by your kennel.
+      <p className="intro">
+        These owners believe their dog was bred or registered by your kennel.
       </p>
 
       {requests.length === 0 ? (
-        <p className="empty">No pending verification requests</p>
+        <div className="empty-state">
+          <p>No pending verification requests</p>
+          <p className="hint">All quiet on the pedigree front</p>
+        </div>
       ) : (
-        <div className="request-list">
+        <div className="request-grid">
           {requests.map(req => (
-            <div
+            <article
               key={req.id}
               id={`request-${req.id}`}
-              className={`request-card ${Number(requestId) === req.id ? "request-card--active" : ""}`}
+              className="request-card"
             >
-              <div className="request-card__pet">
+              <div className="pet-header">
                 <img
                   src={req.pet.images?.[0]?.url || "/placeholder-dog.jpg"}
                   alt={req.pet.name}
-                  className="request-card__img"
+                  className="pet-image"
                 />
-                <div>
-                  <strong>{req.pet.name || "Unnamed Pet"}</strong>
-                  <br />
-                  {req.pet.breed} • {req.pet.sex} • {req.pet.color}
-                  <br />
-                  <small>
+                <div className="pet-info">
+                  <h3>{req.pet.name || "Unnamed Pet"}</h3>
+                  <p>{req.pet.breed} • {req.pet.sex} • {req.pet.color || "Unknown color"}</p>
+                  <p className="owner">
                     Owner: {req.pet.owner.profile?.firstName 
                       ? `${req.pet.owner.profile.firstName} ${req.pet.owner.profile.lastName || ""}`
                       : req.pet.owner.email}
-                  </small>
+                  </p>
                 </div>
               </div>
 
               {req.message && (
-                <div className="request-card__message">
-                  "{req.message}"
+                <div className="message">
+                  <strong>Message:</strong> "{req.message}"
                 </div>
               )}
 
-              <div className="request-card__actions">
-                <button
-                  onClick={() => handleRespond(req.id, "ACCEPTED")}
-                  className="btn btn--success"
-                  disabled={req.status !== "PENDING"}
-                >
-                  Accept
+              <div className="actions">
+                <button onClick={() => handleAccept(req.id)} className="btn btn--success">
+                  Accept Verification
                 </button>
-                <button
-                  onClick={() => handleRespond(req.id, "REJECTED")}
-                  className="btn btn--danger"
-                  disabled={req.status !== "PENDING"}
-                >
+                <button onClick={() => handleReject(req.id)} className="btn btn--danger">
                   Reject
                 </button>
-                <Link 
-                    to={`/pets/${req.pet.id}`} 
-                    className="btn btn--outline"
-                    state={{ from: "kennel-requests" }}
-                    >
-                    View Pet
+                <Link to={`/pet/${req.pet.id}`} className="btn btn--outline">
+                  View Full Profile
                 </Link>
               </div>
-
-              {req.status !== "PENDING" && (
-                <span className={`badge badge--${req.status.toLowerCase()}`}>
-                  {req.status}
-                </span>
-              )}
-            </div>
+            </article>
           ))}
         </div>
       )}

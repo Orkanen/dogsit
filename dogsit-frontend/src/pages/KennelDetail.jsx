@@ -1,117 +1,116 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import "@/styles/pages/_kennel-detail.scss";
-import RequestJoinModal from "@/components/ui/RequestJoinModal";
 import api from "@/api";
-
+import RequestJoinModal from "@/components/ui/RequestJoinModal";
+import "@/styles/pages/_kennel-detail.scss";
 
 export default function KennelDetail() {
   const { id } = useParams();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   const [kennel, setKennel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
   const [isMember, setIsMember] = useState(false);
+  const [hasPendingRequest, setHasPendingRequest] = useState(false);
 
-  // Modal state
+  // Modal
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalState, setModalState] = useState("idle");
+  const [modalState, setModalState] = useState("idle"); // idle | loading | success | error
   const [modalMessage, setModalMessage] = useState("");
 
   useEffect(() => {
-    const loadKennel = async () => {
+    const load = async () => {
       try {
-        const publicKennel = await api.kennel.getKennelById(id);
-        setKennel(publicKennel);
-
+        const kennel = await api.kennel.getKennelById(id);
+        setKennel(kennel);
+  
         if (user) {
-          const myKennels = await api.kennel.getMyKennels().catch(() => []);
-          const membership = myKennels.find(k => k.id === parseInt(id));
+          // Check if user is a member of this specific kennel
+          const myKennels = await api.kennel.getMyKennels();
+          const membership = myKennels.find(k => k.id === Number(id));
+          
           if (membership) {
-            setIsMember(true);
             setIsOwner(membership.myRole === "OWNER");
+            setIsMember(true);
           }
+  
+          // Check pending membership request
+          const requests = await api.kennel.getRequests();
+          const hasPending = requests.some(r => 
+            r.type === "MEMBERSHIP" && 
+            r.kennel.id === Number(id) && 
+            r.userId === user.id
+          );
+          setHasPendingRequest(hasPending);
         }
       } catch (err) {
-        console.error("[KennelDetail] Failed to load kennel:", err);
+        console.error("Failed to load kennel:", err);
+        setError("Kennel not found or unavailable");
       } finally {
         setLoading(false);
       }
     };
-    loadKennel();
+    load();
   }, [id, user]);
 
   const handleJoinRequest = async () => {
+    if (!isAuthenticated) return navigate("/login");
+
     setModalState("loading");
-    setModalMessage("");
+    setModalMessage("Sending request...");
     setModalOpen(true);
 
     try {
       await api.kennel.requestKennelMembership(id);
       setModalState("success");
-      setTimeout(() => setModalOpen(false), 4000);
+      setModalMessage("Request sent! The kennel owner will review it.");
+      setHasPendingRequest(true);
+      setTimeout(() => setModalOpen(false), 3000);
     } catch (err) {
       setModalState("error");
-      setModalMessage(err.message || "Something went wrong. Please try again.");
+      setModalMessage(err.message || "Failed to send request");
     }
   };
 
-  if (loading) return <div className="kennel-detail__loading">Loading kennel...</div>;
+  if (loading) return <div className="kennel-detail__loading">Loading kennel…</div>;
   if (!kennel) return <div className="kennel-detail__error">Kennel not found</div>;
 
   return (
     <article className="kennel-detail">
-      <Link to="/kennel" className="kennel-detail__back">
-        ← All Kennels
-      </Link>
+      <Link to="/kennels" className="kennel-detail__back">← All Kennels</Link>
 
       <header className="kennel-detail__header">
         <h1 className="kennel-detail__name">{kennel.name}</h1>
-        <p className="kennel-detail__location">
-          {kennel.location || "Location not set"}
-        </p>
+        {kennel.location && <p className="kennel-detail__location">{kennel.location}</p>}
       </header>
 
       <div className="kennel-detail__stats">
-        <span>
-          <strong>{kennel.memberCount}</strong> Members
-        </span>
-        <span>
-          <strong>{kennel.dogCount}</strong> Dogs
-        </span>
+        <div><strong>{kennel.memberCount}</strong> Members</div>
+        <div><strong>{kennel.dogCount}</strong> Registered Dogs</div>
       </div>
 
-      {/* Owner / Member badges */}
-      {isOwner && <div className="kennel-detail__badge owner">You are the Owner</div>}
-      {isMember && !isOwner && <div className="kennel-detail__badge member">You are a Member</div>}
+      {/* Status Badges */}
+      {isOwner && <div className="badge badge--owner">You own this kennel</div>}
+      {isMember && !isOwner && <div className="badge badge--member">You are a member</div>}
+      {hasPendingRequest && <div className="badge badge--pending">Request pending</div>}
 
-      {/* Action buttons */}
-      {!isMember && user && (
-        <button
-          onClick={() => api.kennel.requestKennelMembership(id)}
-          className="kennel-detail__join-btn"
-        >
+      {/* Action Buttons */}
+      {!isMember && !hasPendingRequest && (
+        <button onClick={handleJoinRequest} className="btn btn--primary btn--large">
           Request to Join Kennel
         </button>
       )}
 
-      {!user && (
-        <div className="kennel-detail__login-prompt">
-          <Link to="/login" className="kennel-detail__login-link">
-            Log in
-          </Link>{" "}
-          to request membership
-        </div>
+      {isOwner && (
+        <Link to="/kennel/dashboard" className="btn btn--success btn--large">
+          Go to Kennel Dashboard →
+        </Link>
       )}
-    {isOwner && (
-      <Link to="/kennel/dashboard" className="kennel-profile__dashboard-link">
-        Go to Dashboard →
-      </Link>
-    )}
 
-    {/* MODAL */}
+      {/* Modal */}
       <RequestJoinModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}

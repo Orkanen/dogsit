@@ -1,43 +1,25 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "@/api";
-import "@/styles/pages/_kennelDashboard.scss";
 import { useAuth } from "@/context/AuthContext";
+import PendingRequestCard from "@/components/ui/cards/PendingRequestCard";
+import "@/styles/pages/_kennelDashboard.scss";
 
 export default function KennelDashboard() {
   const { user } = useAuth();
   const [kennels, setKennels] = useState([]);
-  const [requests, setRequests] = useState([]); // Kennel membership + pet verification
-  const [pendingCerts, setPendingCerts] = useState([]); // Certification requests
-  const [courses, setCourses] = useState([]);
+  const [requests, setRequests] = useState([]); // Membership + Pet verification
   const [loading, setLoading] = useState(true);
-
-  const ownedKennels = kennels.filter(
-    (k) =>
-      k.members?.some((m) => m.userId === user?.id && m.role === "OWNER") ||
-      k.myRole === "OWNER"
-  );
-
-  const isAdmin =
-    (user && (user.role === "admin" || (user.roles && user.roles.includes("admin")))) ||
-    false;
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [kennelRes, reqRes, coursesRes, pendingRes] = await Promise.all([
-        api.kennel.getMyKennels(),
-        api.kennel.getKennelRequests(),
-        api.courses.getMyIssuableCourses(), //possibly outdated
-        api.certification.getPendingCertifications(), //possibly outdated
-      ]);
-
-      setKennels(kennelRes || []);
-      setRequests(reqRes || []);
-      setCourses(coursesRes || []);
-      setPendingCerts(pendingRes || []);
+      const data = await api.kennel.getManagedData();
+      setKennels(data.kennels || []);
+      setRequests(data.requests || []);
     } catch (err) {
-      console.error("Dashboard load error:", err);
+      console.error("Kennel dashboard load error:", err);
+      alert("Failed to load kennel data");
     } finally {
       setLoading(false);
     }
@@ -47,242 +29,73 @@ export default function KennelDashboard() {
     loadData();
   }, []);
 
-  const handleAdminApprove = async (id) => {
-    if (!confirm("Are you sure you want to approve this certification (admin-only)?")) return;
-    try {
-      await api.certification.approveCertification(id); //possibly outdated
-      loadData();
-    } catch (err) {
-      alert("Failed to approve certification: " + (err.message || ""));
-    }
-  };
-
-  const handleReject = async (id) => {
-    if (!confirm("Are you sure you want to reject this certification?")) return;
-    try {
-      await api.certification.rejectCertification(id); //possibly outdated
-      loadData();
-    } catch (err) {
-      alert("Failed to reject certification: " + (err.message || ""));
-    }
-  };
-
-  const handleVerify = async (id) => {
-    if (!confirm("Verify this certification as club certifier?")) return;
-    try {
-      await api.certification.verifyCertification(id); //possibly outdated
-      alert("Certification verified by certifier (still requires platform admin approval).");
-      loadData();
-    } catch (err) {
-      alert("Failed to verify: " + (err.message || ""));
-    }
-  };
-
   const handleAcceptRequest = async (reqId) => {
     if (!confirm("Accept this request?")) return;
     try {
-      await api.kennel.acceptKennelRequest(reqId);
+      await api.kennel.acceptRequest(reqId);
       loadData();
     } catch {
-      alert("Failed to accept request");
+      alert("Failed to accept");
     }
   };
 
   const handleRejectRequest = async (reqId) => {
     if (!confirm("Reject this request?")) return;
     try {
-      await api.kennel.rejectKennelRequest(reqId);
+      await api.kennel.rejectRequest(reqId);
       loadData();
     } catch {
-      alert("Failed to reject request");
+      alert("Failed to reject");
     }
   };
 
-  const totalPending = requests.length + pendingCerts.length;
+  if (loading) return <div className="kennel-dashboard__loader">Loading your kennels…</div>;
+
+  if (kennels.length === 0) {
+    return (
+      <div className="kennel-dashboard__empty">
+        <h1>Kennel Dashboard</h1>
+        <p>You don't own any kennels yet.</p>
+        <Link to="/kennel/create" className="btn btn--primary">Create Your First Kennel</Link>
+      </div>
+    );
+  }
 
   return (
     <section className="kennel-dashboard">
       <header className="kennel-dashboard__header">
-        <h1 className="kennel-dashboard__title">Kennel Dashboard</h1>
-        <Link to="/" className="kennel-dashboard__home-link">
-          Back to Home
-        </Link>
+        <h1>Kennel Dashboard</h1>
+        <Link to="/">← Back to Home</Link>
       </header>
 
       {/* My Kennels */}
-      <section className="kennel-dashboard__kennels">
-        <h2 className="kennel-dashboard__section-title">My Kennels</h2>
-        {loading ? (
-          <div className="kennel-dashboard__loader">Loading kennels…</div>
-        ) : kennels.length === 0 ? (
-          <div className="kennel-dashboard__empty">
-            <p>
-              You don’t have any kennels yet.{" "}
-              <Link to="/kennel/create" className="kennel-dashboard__create-link">
-                Create your first kennel
-              </Link>
-            </p>
-          </div>
-        ) : (
-          <div className="kennel-dashboard__kennels-grid">
-            {kennels.map((k) => (
-              <article key={k.id} className="kennel-dashboard__kennel-card">
-                <h3 className="kennel-dashboard__kennel-name">{k.name}</h3>
-                {k.location && <p className="kennel-dashboard__kennel-location">{k.location}</p>}
-                <p className="kennel-dashboard__kennel-pets">
-                  {k.dogCount || 0} {k.dogCount === 1 ? "dog" : "dogs"} registered
-                </p>
-                <Link to={`/kennel/${k.id}`} className="kennel-dashboard__kennel-link">
-                  View Kennel
-                </Link>
-              </article>
-            ))}
-          </div>
-        )}
+      <section>
+        <h2>My Kennels ({kennels.length})</h2>
+        <div className="kennel-grid">
+          {kennels.map(k => (
+            <Link key={k.id} to={`/kennel/${k.id}`} className="kennel-card">
+              <h3>{k.name}</h3>
+              <p>{k.dogCount || 0} registered dogs</p>
+            </Link>
+          ))}
+        </div>
       </section>
 
-      {/* Incoming Requests */}
-      <section className="kennel-dashboard__requests">
-        <h2 className="kennel-dashboard__section-title">
-          Incoming Requests <span className="kennel-dashboard__count">({totalPending})</span>
-        </h2>
-
-        {loading ? (
-          <div className="kennel-dashboard__loader">Loading requests…</div>
-        ) : totalPending === 0 ? (
-          <div className="kennel-dashboard__empty">
-            <p>No pending requests</p>
-            <p className="kennel-dashboard__empty-hint">All quiet on the kennel front</p>
-          </div>
-        ) : (
-          <div className="kennel-dashboard__requests-list">
-            {requests.map((req) => {
-              const isPetLink = req.type === "PET_LINK";
-              const pet = isPetLink ? req.pet : null;
-              const requesterProfile = isPetLink ? pet?.owner?.profile : req.user?.profile;
-              const requesterName = requesterProfile
-                ? `${requesterProfile.firstName || ""} ${requesterProfile.lastName || ""}`.trim() || "User"
-                : "User";
-
-              const kennelName = req.kennel?.name || "Unknown Kennel";
-
-              const title = isPetLink
-                ? `${pet?.name || "A pet"} wants to be verified by ${kennelName}`
-                : `${requesterName} wants to join ${kennelName}`;
-
-              const subtitle = isPetLink
-                ? `${pet?.breed || "Unknown breed"}${pet?.color ? ` • ${pet?.color}` : ""}`
-                : req.user?.email;
-
-              return isPetLink ? (
-                <Link
-                  key={req.id}
-                  to={`/kennel/requests/pet/${req.id}`}
-                  className="kennel-dashboard__request kennel-dashboard__request--pet kennel-dashboard__request--clickable"
-                >
-                  {pet?.images?.[0]?.url ? (
-                    <img src={pet.images[0].url} alt={pet.name} className="kennel-dashboard__request-image" loading="lazy" />
-                  ) : (
-                    <div className="kennel-dashboard__request-avatar">Dog</div>
-                  )}
-                  <div className="kennel-dashboard__request-info">
-                    <h4 className="kennel-dashboard__request-title">{title}</h4>
-                    <p className="kennel-dashboard__request-subtitle">{subtitle}</p>
-                    {req.message && <p className="kennel-dashboard__request-message">"{req.message}"</p>}
-                    <span className="kennel-dashboard__view-detail">View full verification request</span>
-                  </div>
-                </Link>
-              ) : (
-                <article key={req.id} className="kennel-dashboard__request kennel-dashboard__request--member">
-                  <div className="kennel-dashboard__request-avatar">Person</div>
-                  <div className="kennel-dashboard__request-info">
-                    <h4 className="kennel-dashboard__request-title">{title}</h4>
-                    <p className="kennel-dashboard__request-subtitle">{subtitle}</p>
-                    {req.message && <p className="kennel-dashboard__request-message">"{req.message}"</p>}
-                  </div>
-                  <div className="kennel-dashboard__request-actions">
-                    <button
-                      onClick={() => handleAcceptRequest(req.id)}
-                      className="kennel-dashboard__btn kennel-dashboard__btn--accept"
-                      disabled={req.status !== "PENDING"}
-                    >
-                      Accept
-                    </button>
-                    <button
-                      onClick={() => handleRejectRequest(req.id)}
-                      className="kennel-dashboard__btn kennel-dashboard__btn--reject"
-                      disabled={req.status !== "PENDING"}
-                    >
-                      Reject
-                    </button>
-                  </div>
-                  {req.status !== "PENDING" && (
-                    <span className={`kennel-dashboard__status-badge kennel-dashboard__status--${req.status.toLowerCase()}`}>
-                      {req.status}
-                    </span>
-                  )}
-                </article>
-              );
-            })}
-
-            {pendingCerts.map((cert) => (
-              <article key={`cert-${cert.id}`} className="kennel-dashboard__request kennel-dashboard__request--cert">
-                <div className="kennel-dashboard__request-avatar">Certificate</div>
-
-                <div className="kennel-dashboard__request-info">
-                  <h4 className="kennel-dashboard__request-title">
-                    Certification Request: <strong>{cert.course.title}</strong>
-                  </h4>
-                  <p className="kennel-dashboard__request-subtitle">
-                    {cert.pet ? `${cert.pet.name} (${cert.pet.breed || "Unknown breed"})` : `${cert.user.profile.firstName} ${cert.user.profile.lastName || ""}`}
-                  </p>
-                  {cert.notes && <p className="kennel-dashboard__request-message">"{cert.notes}"</p>}
-                  <p className="kennel-dashboard__request-meta">Requested {new Date(cert.createdAt).toLocaleDateString()}</p>
-
-                  {cert.issuingClub && (
-                    <div style={{ marginTop: "0.5rem" }}>
-                      <small className="text-muted">Club issuance</small>
-                      <div style={{ marginTop: "0.5rem" }}>
-                        <button onClick={() => handleVerify(cert.id)} className="kennel-dashboard__btn kennel-dashboard__btn--verify">
-                          Verify (club certifier)
-                        </button>
-                        {isAdmin ? (
-                          <button onClick={() => handleAdminApprove(cert.id)} className="kennel-dashboard__btn kennel-dashboard__btn--accept" style={{ marginLeft: "0.5rem" }}>
-                            Approve (admin)
-                          </button>
-                        ) : (
-                          <span style={{ marginLeft: "0.75rem", color: "#666" }}>Awaiting platform admin approval</span>
-                        )}
-                        <button onClick={() => handleReject(cert.id)} className="kennel-dashboard__btn kennel-dashboard__btn--reject" style={{ marginLeft: "0.5rem" }}>
-                          Reject
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {cert.issuingKennel && (
-                    <div style={{ marginTop: "0.5rem" }}>
-                      <small className="text-muted">Kennel issuance</small>
-                      <div style={{ marginTop: "0.5rem" }}>
-                        {isAdmin ? (
-                          <button onClick={() => handleAdminApprove(cert.id)} className="kennel-dashboard__btn kennel-dashboard__btn--accept">
-                            Approve (admin)
-                          </button>
-                        ) : (
-                          <span style={{ color: "#666" }}>Awaiting platform admin approval</span>
-                        )}
-                        <button onClick={() => handleReject(cert.id)} className="kennel-dashboard__btn kennel-dashboard__btn--reject" style={{ marginLeft: "0.5rem" }}>
-                          Reject
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </article>
+      {/* Requests */}
+      {requests.length > 0 && (
+        <section className="kennel-dashboard__requests">
+          <h2>Pending Requests ({requests.length})</h2>
+          <div className="request-list">
+            {requests.map((req) => (
+              <PendingRequestCard
+                key={req.id}
+                request={req}
+                onRefresh={loadData}
+              />
             ))}
           </div>
-        )}
-      </section>
+        </section>
+      )}
     </section>
   );
 }

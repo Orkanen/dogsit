@@ -22,6 +22,12 @@ const clubApi = {
   getMyManagedClubs: async () => {
     return await fetchWithAuth("/me/clubs");
   },
+
+  nominateCertifier: (clubId, userId) =>
+    fetchWithAuth(`/clubs/${clubId}/certifier`, {
+      method: "POST",
+      body: JSON.stringify({ userId }),
+    }),
 };
 
 export default clubApi;

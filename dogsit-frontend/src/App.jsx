@@ -14,7 +14,7 @@ import Kennels from "./pages/Kennels";
 import KennelDetail from "./pages/KennelDetail";
 import Chat from "./pages/Chat";
 import ChatList from "./pages/ChatList";
-import PetProfile from "./pages/PetProfile";
+import PetPublicProfile from "./pages/PetPublicProfile";
 import CreatePet from "./pages/CreatePet";
 import MyPets from "./pages/MyPets";
 import EditPet from "./pages/EditPet";
@@ -41,7 +41,7 @@ export default function App() {
         <Route path="/club/:id" element={<ClubPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/pets/:id" element={<PetProfile />} />
+        <Route path="/pets/:id" element={<PetPublicProfile />} />
         <Route path="/sitters" element={<Sitters />} />
         <Route path="/sitter/:id" element={<SitterPublicProfile />} />
         <Route path="/clubs" element={<Clubs />} />

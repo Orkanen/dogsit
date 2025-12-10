@@ -1,70 +1,83 @@
 import { Link } from "react-router-dom";
 import api from "@/api";
-import "@/styles/components/cards/_pendingRequestCard.scss";
 
 export default function PendingRequestCard({ request, onRefresh }) {
-    const requester = request.user || request.pet?.owner || {};
-    const profile = requester.profile || {};
-    const name = profile.firstName
-      ? `${profile.firstName} ${profile.lastName || ""}`.trim()
-      : requester.email || "Unknown User";
-    const email = requester.email || "";
-    const profileId = requester.id;
-    const clubName = request.club?.name || "Unknown Club";
-  
-    const handleAccept = async () => {
-      try {
-        await api.club.acceptMember(request.clubId, requester.id);
-        onRefresh();
-      } catch (err) {
-        alert("Accept failed: " + (err.message || "Unknown error"));
+  const isPetRequest = request.type === "PET_LINK";
+  const isMembership = request.type === "MEMBERSHIP" || !request.type;
+
+  const requesterName = isPetRequest
+    ? request.pet?.owner?.profile
+      ? `${request.pet.owner.profile.firstName} ${request.pet.owner.profile.lastName || ""}`.trim()
+      : request.pet?.owner?.email
+    : request.user?.profile
+      ? `${request.user.profile.firstName} ${request.user.profile.lastName || ""}`.trim()
+      : request.user?.email;
+
+  const targetName = request.kennel?.name || request.club?.name || "Unknown";
+
+  const handleAccept = async () => {
+    try {
+      if (isPetRequest) {
+        await api.kennel.acceptRequest(request.id);
+      } else if (request.clubId) {
+        await api.club.acceptMember(request.clubId, request.user.id);
       }
-    };
-  
-    const handleReject = async () => {
-      try {
-        await api.club.rejectMember(request.clubId, requester.id);
-        onRefresh();
-      } catch (err) {
-        alert("Reject failed: " + (err.message || "Unknown error"));
+      onRefresh();
+    } catch (err) {
+      alert("Accept failed: " + (err.message || ""));
+    }
+  };
+
+  const handleReject = async () => {
+    try {
+      if (isPetRequest) {
+        await api.kennel.rejectRequest(request.id);
+      } else if (request.clubId) {
+        await api.club.rejectMember(request.clubId, request.user.id);
       }
-    };
-  
-    return (
-      <article className="pending-request-card">
-        <div className="pending-request-card__info">
-          <div className="pending-request-card__header">
-            {profileId ? (
-              <Link to={`/profile/${profileId}`} className="pending-request-card__name-link">
-                {name}
-              </Link>
-            ) : (
-              <span className="pending-request-card__name">{name}</span>
-            )}
-            {email && <span className="pending-request-card__email">&lt;{email}&gt;</span>}
-          </div>
-  
-          <p className="pending-request-card__text">
-            wants to join <strong>{clubName}</strong>
+      onRefresh();
+    } catch (err) {
+      alert("Reject failed: " + (err.message || ""));
+    }
+  };
+
+  return (
+    <article className="pending-request-card">
+      <div className="pending-request-card__avatar">
+        {isPetRequest && request.pet?.images?.[0]?.url ? (
+          <img src={request.pet.images[0].url} alt={request.pet.name} />
+        ) : (
+          <div className="avatar-placeholder">User</div>
+        )}
+      </div>
+
+      <div className="pending-request-card__info">
+        <h4>
+          <strong>{requesterName || "Someone"}</strong> wants to{" "}
+          {isPetRequest ? "verify pet with" : "join"} <strong>{targetName}</strong>
+        </h4>
+
+        {isPetRequest && request.pet && (
+          <p>
+            Pet: <strong>{request.pet.name}</strong> ({request.pet.breed})
+            {" • "}
+            <Link to={`/pet/${request.pet.id}`}>View Pet</Link>
           </p>
-  
-          {request.message && (
-            <p className="pending-request-card__message">"{request.message}"</p>
-          )}
-  
-          {request.type && request.type !== "MEMBERSHIP" && (
-            <p className="pending-request-card__type">Type: {request.type}</p>
-          )}
-        </div>
-  
-        <div className="pending-request-card__actions">
-          <button onClick={handleAccept} className="btn btn--success">
-            Accept
-          </button>
-          <button onClick={handleReject} className="btn btn--danger">
-            Reject
-          </button>
-        </div>
-      </article>
-    );
+        )}
+
+        {request.message && (
+          <p className="message">"{request.message}"</p>
+        )}
+      </div>
+
+      <div className="pending-request-card__actions">
+        <button onClick={handleAccept} className="btn btn--success">
+          Accept
+        </button>
+        <button onClick={handleReject} className="btn btn--danger">
+          Reject
+        </button>
+      </div>
+    </article>
+  );
 }

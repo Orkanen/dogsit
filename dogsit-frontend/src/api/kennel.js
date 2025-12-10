@@ -1,59 +1,40 @@
 import fetchPublic from "./fetchPublic";
 import fetchWithAuth from "./fetchWithAuth";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "";
-
 const kennelApi = {
+  // PUBLIC
   getKennels: () => fetchPublic("/kennel"),
-
   getKennelById: (id) => fetchPublic(`/kennel/${id}`),
 
-  getMyKennels: async () => {
-    try {
-      const data = await fetchWithAuth(`/kennel/my`);
-      return Array.isArray(data) ? data : data || [];
-    } catch (err) {
-      if (err?.status === 401 || err?.status === 403) return [];
-      console.error("[kennelApi] getMyKennels error:", err);
-      return [];
-    }
-  },
-
-  getKennelRequests: () => fetchWithAuth(`/kennel/requests`),
-
-  acceptKennelRequest: (requestId) =>
-    fetchWithAuth(`/kennel/requests/${requestId}/accept`, { method: "PATCH" }),
-
-  rejectKennelRequest: (requestId) =>
-    fetchWithAuth(`/kennel/requests/${requestId}/reject`, { method: "PATCH" }),
+  // PROTECTED
+  getManagedData: () => fetchWithAuth("/kennel/my/managed"),
+  getMyKennels: () => fetchWithAuth("/kennel/my"),
+  getRequests: () => fetchWithAuth("/kennel/requests"),
 
   createKennel: (data) =>
-    fetchWithAuth(`/kennel`, {
+    fetchWithAuth("/kennel", {
       method: "POST",
       body: JSON.stringify(data),
     }),
 
-  requestKennelMembership: (kennelId, message = "") =>
-    fetchWithAuth(`/kennel/${kennelId}/request-membership`, {
-      method: "POST",
-      body: JSON.stringify({ message }),
-    }),
+  acceptRequest: (reqId) =>
+    fetchWithAuth(`/kennel/requests/${reqId}/accept`, { method: "PATCH" }),
 
-  requestPetLink: (kennelId, petId, message = "") =>
-    fetchWithAuth(`/kennel/${kennelId}/request-pet`, {
-      method: "POST",
-      body: JSON.stringify({ petId, message }),
-    }),
+  rejectRequest: (reqId) =>
+    fetchWithAuth(`/kennel/requests/${reqId}/reject`, { method: "PATCH" }),
 
-  revokePetVerification: (requestId, reason = "") =>
-    fetchWithAuth(`/kennel/requests/${requestId}/revoke`, {
+  removePetVerification: (petId) =>
+    fetchWithAuth(`/kennel/pet/${petId}/remove-verification`, { method: "POST" }),
+
+  revokeVerification: (reqId, reason) =>
+    fetchWithAuth(`/kennel/requests/${reqId}/revoke`, {
       method: "POST",
       body: JSON.stringify({ reason }),
     }),
-
-  removePetVerification: (petId) =>
-    fetchWithAuth(`/kennel/pet/${petId}/remove-verification`, {
+  requestPetLink: (kennelId, petId, message) =>
+    fetchWithAuth(`/kennel/${kennelId}/request-pet`, {
       method: "POST",
+      body: JSON.stringify({ petId, message }),
     }),
 };
 

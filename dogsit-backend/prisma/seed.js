@@ -104,7 +104,15 @@ async function main() {
       description: "8-week beginner obedience course",
       issuerType: "CLUB",
       clubId: club.id,
-      certifierId: clubCertifier.id,
+      isHidden: false,
+      isAvailable: true,
+      maxParticipants: 20,
+      certifiers: {
+        create: {
+          userId: certifierUser.id,
+          role: "LEAD",
+        },
+      },
     },
   });
 

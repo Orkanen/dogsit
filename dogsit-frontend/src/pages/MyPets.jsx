@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import api from "@/api";
+import api from "../api/index";
 import "@/styles/pages/_myPets.scss";
 
 export default function MyPets() {
@@ -58,7 +58,7 @@ export default function MyPets() {
           {pets.map((pet) => (
             <Link
               key={pet.id}
-              to={`/my-pets/${pet.id}`}               // Secure private profile
+              to={`/my-pets/${pet.id}`}
               className="my-pets__card"
             >
               <div className="my-pets__card-image">
