@@ -12,36 +12,67 @@ const router = express.Router();
 router.post("/", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
-    const { title, description, issuerType, kennelId, clubId, startAt, endAt } = req.body;
-    if (!title || !issuerType) return res.status(400).json({ error: "title and issuerType required" });
+    const {
+      title,
+      description,
+      issuerType,     // "CLUB" or "KENNEL"
+      issuerId,       // clubId or kennelId
+      startAt,
+      endAt,
+      isHidden = false,
+      isAvailable = true,
+    } = req.body;
 
+    if (!title?.trim()) return res.status(400).json({ error: "Title is required" });
+    if (!issuerType || !["CLUB", "KENNEL"].includes(issuerType)) {
+      return res.status(400).json({ error: "issuerType must be CLUB or KENNEL" });
+    }
+    if (!issuerId) return res.status(400).json({ error: `${issuerType === "CLUB" ? "clubId" : "kennelId"} is required` });
+
+    const issuerIdNum = Number(issuerId);
+    if (!Number.isFinite(issuerIdNum)) return res.status(400).json({ error: "Invalid issuer ID" });
+
+    // Authorization: must be OWNER of the club or kennel
     let authorized = false;
-    if (issuerType === "CLUB" && clubId) {
-      const member = await prisma.clubMember.findFirst({ where: { clubId: Number(clubId), userId, role: "OWNER" } });
-      if (member) authorized = true;
+    if (issuerType === "CLUB") {
+      const member = await prisma.clubMember.findFirst({
+        where: { clubId: issuerIdNum, userId, role: "OWNER", status: "ACCEPTED" },
+      });
+      authorized = !!member;
+    } else if (issuerType === "KENNEL") {
+      const member = await prisma.kennelMember.findFirst({
+        where: { kennelId: issuerIdNum, userId, role: "OWNER" },
+      });
+      authorized = !!member;
     }
-    if (issuerType === "KENNEL" && kennelId) {
-      const member = await prisma.kennelMember.findFirst({ where: { kennelId: Number(kennelId), userId, role: "OWNER" } });
-      if (member) authorized = true;
-    }
-    if (!authorized) return res.status(403).json({ error: "Not authorized to create competition for this issuer" });
 
-    const created = await prisma.competition.create({
+    if (!authorized) {
+      return res.status(403).json({ error: "You must be the owner of this club/kennel to create a competition" });
+    }
+
+    const competition = await prisma.competition.create({
       data: {
         title: title.trim(),
         description: description?.trim() || null,
         issuerType,
-        kennelId: issuerType === "KENNEL" ? Number(kennelId) : null,
-        clubId: issuerType === "CLUB" ? Number(clubId) : null,
+        clubId: issuerType === "CLUB" ? issuerIdNum : null,
         startAt: startAt ? new Date(startAt) : null,
         endAt: endAt ? new Date(endAt) : null,
-      }
+        isHidden,
+        isAvailable,
+      },
+      include: {
+        club: issuerType === "CLUB" ? { select: { id: true, name: true } } : false,
+      },
     });
 
-    res.status(201).json(created);
+    res.status(201).json(competition);
   } catch (err) {
-    console.error("Create competition failed", err);
-    res.status(500).json({ error: "Failed to create competition", details: err.message });
+    console.error("Create competition failed:", err);
+    if (err.code === "P2002") {
+      return res.status(409).json({ error: "A competition with this title already exists" });
+    }
+    res.status(500).json({ error: "Failed to create competition" });
   }
 });
 

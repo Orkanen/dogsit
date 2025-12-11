@@ -44,11 +44,11 @@ export default function CompetitionForm({ clubId: propClubId = null, ownedClubs 
         title: title.trim(),
         description: description.trim() || null,
         issuerType: "CLUB",
-        clubId: Number(clubId),
+        issuerId: Number(clubId),
         startAt: startAt ? new Date(startAt).toISOString() : null,
       };
 
-      await api.competitions.createCompetition(payload);
+      await api.competitions.create(payload);
       setMessage("Competition created successfully!");
 
       if (onSave) await onSave();

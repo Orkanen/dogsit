@@ -8,6 +8,7 @@ import PendingRequestCard from "@/components/ui/Cards/PendingRequestCard";
 import CourseCard from "@/components/ui/cards/CourseCard";
 import CompetitionCard from "@/components/ui/cards/CompetitionCard";
 import ClubCard from "../components/ui/Cards/ClubCard";
+import CourseEnrollmentRequestCard from "../components/ui/Cards/CourseEnrollmentRequestCard";
 import "@/styles/pages/_clubDashboard.scss";
 
 export default function ClubDashboard() {
@@ -22,17 +23,22 @@ export default function ClubDashboard() {
   const loadEverything = async () => {
     setLoading(true);
     try {
-      const data = await api.club.getManagedData();
-      setMyClubs(data.clubs || []);
-      setAllCourses(data.courses || []);
-      setAllCompetitions(data.competitions || []);
-      setRequests([
-        ...(data.requests?.membership || []),
-        ...(data.requests?.enrollments || []),
-        ...(data.requests?.entries || [])
+      const [clubsData, enrollmentsData] = await Promise.all([
+        api.club.getManagedData(),
+        api.courses.getPendingEnrollments(),
       ]);
+  
+      setMyClubs(clubsData.clubs || []);
+      setAllCourses(clubsData.courses || []);
+      setAllCompetitions(clubsData.competitions || []);
+  
+      setRequests({
+        membership: clubsData.membershipRequests || [],
+        enrollments: enrollmentsData || [],
+        entries: clubsData.competitionEntries || [],
+      });
     } catch (err) {
-      console.error("Failed to load dashboard", err);
+      console.error("Load failed", err);
     } finally {
       setLoading(false);
     }
@@ -83,15 +89,37 @@ export default function ClubDashboard() {
         </div>
       </section>
 
-      {/* PENDING REQUESTS */}
-      {requests.length > 0 && (
+      {/* PENDING REQUESTS — Only membership */}
+      {requests.membership.length > 0 && (
         <section className="club-dashboard__requests">
           <h2 className="club-dashboard__section-title">
-            Incoming Requests <span className="club-dashboard__count">({requests.length})</span>
+            Membership & Pet Requests ({requests.membership.length})
           </h2>
           <div className="club-dashboard__requests-list">
-            {requests.map(req => (
-              <PendingRequestCard key={req.id} request={req} onRefresh={loadEverything} />
+            {requests.membership.map(req => (
+              <PendingRequestCard
+                key={req.id}
+                request={req}
+                onRefresh={loadEverything}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* COURSE ENROLLMENT REQUESTS — Separate section */}
+      {requests.enrollments.length > 0 && (
+        <section className="club-dashboard__requests">
+          <h2 className="club-dashboard__section-title">
+            Course Enrollment Requests ({requests.enrollments.length})
+          </h2>
+          <div className="club-dashboard__requests-list">
+            {requests.enrollments.map(enrollment => (
+              <CourseEnrollmentRequestCard
+                key={enrollment.id}
+                enrollment={enrollment}
+                onRefresh={loadEverything}
+              />
             ))}
           </div>
         </section>

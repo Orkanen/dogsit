@@ -24,6 +24,14 @@ const petApi = {
     }),
 
   deletePet: (id) => fetchWithAuth(`/pets/${id}`, { method: "DELETE" }),
+
+  attachImage: (id, imageId) =>
+    fetchWithAuth(`/pets/${id}/image`, {
+      method: "POST",
+      body: JSON.stringify({ imageId }),
+    }),
+
+  // NOTE: Kennel verification request is in kennelApi.requestPetLink
 };
 
 export default petApi;

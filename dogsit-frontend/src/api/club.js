@@ -28,6 +28,12 @@ const clubApi = {
       method: "POST",
       body: JSON.stringify({ userId }),
     }),
+    
+  processEnrollment: (enrollmentId, action) =>
+    fetchWithAuth(`/club/requests/enrollments/${enrollmentId}/process`, {
+      method: "PATCH",
+      body: JSON.stringify({ action: action.toUpperCase() }),
+    }),
 };
 
 export default clubApi;

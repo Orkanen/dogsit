@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import api from "@/api";
 import { useAuth } from "@/context/AuthContext";
 import ClubCard from "../components/ui/Cards/ClubCard";
+import CourseApplication from "../components/CourseApplication"; // ← ADD THIS IMPORT
 import "@/styles/pages/_clubPage.scss";
 
 export default function ClubPage() {
@@ -18,8 +19,16 @@ export default function ClubPage() {
       try {
         setLoading(true);
         setError(null);
-        const data = await api.club.getClubById(id);
-        setClub(data);
+  
+        // Fetch club WITH courses
+        const clubData = await api.club.getClubById(id);
+  
+        // Ensure courses are included
+        if (!clubData.courses) {
+          clubData.courses = [];
+        }
+  
+        setClub(clubData);
       } catch (err) {
         console.error("Failed to load club:", err);
         setError("Club not found or unavailable");
@@ -89,6 +98,29 @@ export default function ClubPage() {
             Go to Club Dashboard →
           </Link>
         </div>
+      )}
+
+      {/* COURSES SECTION */}
+      {club.courses && club.courses.length > 0 && (
+        <section className="club-page__courses">
+          <h2 className="club-page__section-title">
+            Available Courses ({club.courses.filter(c => c.isAvailable && !c.isHidden).length})
+          </h2>
+          <div className="club-page__courses-grid">
+            {club.courses
+              .filter(course => course.isAvailable && !course.isHidden)
+              .map(course => (
+                <CourseApplication
+                  key={course.id}
+                  course={course}
+                  clubId={club.id}
+                  isMember={isMember}
+                  hasPendingRequest={hasPendingRequest}
+                  onJoinClub={handleJoin}
+                />
+              ))}
+          </div>
+        </section>
       )}
 
       <footer className="club-page__footer">

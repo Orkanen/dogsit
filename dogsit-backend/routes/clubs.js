@@ -62,9 +62,7 @@ router.get("/my", authenticateToken, async (req, res) => {
     const clubs = await prisma.club.findMany({
       where: { members: { some: { userId, role: { in: ["OWNER", "EMPLOYEE"] } } } },
       include: {
-        members: {
-          include: { user: { select: { id: true, email: true, profile: { select: { firstName: true, lastName: true } } } } },
-        },
+        members: { include: { user: { select: { id: true, email: true, profile: { select: { firstName: true, lastName: true } } } } } },
         // Use relation names that exist in your schema
         coursesIssued: true,
         competitions: {
@@ -93,7 +91,7 @@ router.post("/", authenticateToken, async (req, res) => {
     const userId = req.user.id;
     if (!name || !name.trim()) return res.status(400).json({ error: "Name is required" });
 
-    const existing = await prisma.club.findUnique({ where: { name: name.trim() } });
+    const existing = prisma.club.findUnique({ where: { name: name.trim() } });
     if (existing) return res.status(409).json({ error: "Club with this name already exists", existing });
 
     const club = await prisma.club.create({
@@ -143,7 +141,9 @@ router.get("/:id", async (req, res) => {
     const club = await prisma.club.findUnique({
       where: { id },
       include: {
-        members: { include: { user: { select: { id: true, email: true, profile: { select: { firstName: true, lastName: true } } } } } },
+        members: {
+          include: { user: { select: { id: true, email: true, profile: { select: { firstName: true, lastName: true } } } } },
+        },
         competitions: {
           include: {
             entries: { include: { user: { select: { id: true, profile: { select: { firstName: true, lastName: true } } } }, pet: true } },
@@ -152,54 +152,24 @@ router.get("/:id", async (req, res) => {
         },
         awardsIssued: true,
         certifiers: true,
+        coursesIssued: {  // ← FIXED: use 'coursesIssued' relation name
+          include: {
+            enrollments: true,
+            certifiers: { include: { user: true } },
+            certifications: true,
+          },
+          orderBy: { createdAt: "desc" },
+        },
       },
     });
 
     if (!club) return res.status(404).json({ error: "Club not found" });
 
-    // Fetch courses separately so we can include any fields we need without relying on a Course -> assignment relation name
-    const courses = await prisma.course.findMany({
-      where: { clubId: id },
-      orderBy: { createdAt: "asc" },
-      // include any course-level relations you do want here (kennel, club, enrollments, etc) — avoid non-existent relation names
-      include: {
-        club: true,
-        certifiers: true,
-        certifications: true,
-        enrollments: true,
-      },
-    });
-
-    // If there are no courses, just return club with empty courses arrays
-    if (!courses.length) {
-      return res.json({ ...club, courses: [], coursesIssued: [] });
-    }
-
-    // Fetch course certifier assignments (join table) for these courses in one query
-    const courseIds = courses.map((c) => c.id);
-    const assignments = await prisma.courseCertifierAssignment.findMany({
-      where: { courseId: { in: courseIds } },
-      include: { user: { select: { id: true, email: true, profile: { select: { firstName: true, lastName: true } } } } },
-    });
-
-    // Group assignments by courseId
-    const assignmentsByCourse = assignments.reduce((acc, a) => {
-      acc[a.courseId] = acc[a.courseId] || [];
-      acc[a.courseId].push(a);
-      return acc;
-    }, {});
-
-    // Attach assignments to each course object (under a predictable field)
-    const coursesWithAssignments = courses.map((c) => ({
-      ...c,
-      courseCertifierAssignments: assignmentsByCourse[c.id] || [],
-    }));
-
+    // Since courses are now included directly, no need for manual fetch
     // Return club with courses in both shapes some frontends expect
     const result = {
       ...club,
-      courses: coursesWithAssignments,
-      coursesIssued: coursesWithAssignments,
+      courses: club.coursesIssued,
     };
 
     res.json(result);
@@ -274,8 +244,21 @@ router.get("/:id/requests", authenticateToken, async (req, res) => {
       },
       include: {
         course: { select: { id: true, title: true } },
-        user: { select: { id: true, profile: { select: { firstName: true, lastName: true } } } },
-        pet: { select: { id: true, name: true } },
+        user: { 
+          select: { 
+            id: true, 
+            profile: { select: { firstName: true, lastName: true } },
+            email: true 
+          } 
+        },
+        pet: { 
+          select: { 
+            id: true, 
+            name: true, 
+            breed: true,
+            images: { take: 1 } 
+          } 
+        },
       },
       orderBy: { appliedAt: "desc" },
     });
@@ -321,7 +304,7 @@ router.patch("/requests/members/:clubId/:userId/:action", authenticateToken, asy
 
     // Authorization
     const processor = await prisma.clubMember.findFirst({
-      where: { clubId, userId: actorId, role: { in: ["OWNER", "EMPLOYEE"] }, status: "ACCEPTED" },
+      where: { clubId, userId: actorId, role: { in: ["OWNER", "EMPLOYEE"] } },
     });
     if (!processor) return res.status(403).json({ error: "Not authorized" });
 

@@ -106,4 +106,82 @@ router.patch("/:id/process", authenticateToken, async (req, res) => {
   }
 });
 
+/**
+ * POST /courses/:id/enroll
+ * Enroll current user's pet in a course
+ * Body: { petId }
+ */
+router.post("/:id/enroll", authenticateToken, async (req, res) => {
+  const courseId = Number(req.params.id);
+  const { petId } = req.body;
+  const userId = req.user.id;
+
+  if (!petId) return res.status(400).json({ error: "petId is required" });
+
+  try {
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+      include: { club: true },
+    });
+
+    if (!course) return res.status(404).json({ error: "Course not found" });
+    if (!course.isAvailable) return res.status(400).json({ error: "Course is not available" });
+    if (course.isHidden) return res.status(400).json({ error: "Course is hidden" });
+
+    // Only visible to members anyway
+
+    // 1. User must be ACCEPTED member of the club
+    const membership = await prisma.clubMember.findFirst({
+      where: {
+        clubId: course.clubId,
+        userId,
+        status: "ACCEPTED",
+      },
+    });
+
+    if (!membership) {
+      return res.status(403).json({ error: "You must be a club member to enroll" });
+    }
+
+    // 2. Pet must belong to user
+    const pet = await prisma.pet.findUnique({
+      where: { id: Number(petId) },
+    });
+
+    if (!pet || pet.ownerId !== userId) {
+      return res.status(403).json({ error: "This is not your pet" });
+    }
+
+    // 3. Prevent duplicate enrollment
+    const existing = await prisma.courseEnrollment.findUnique({
+      where: {
+        courseId_petId: { courseId, petId: Number(petId) },
+      },
+    });
+
+    if (existing) {
+      return res.status(400).json({ error: "Pet is already enrolled in this course" });
+    }
+
+    // 4. Create enrollment
+    const enrollment = await prisma.courseEnrollment.create({
+      data: {
+        courseId,
+        userId,
+        petId: Number(petId),
+        status: "APPLIED", // or "APPROVED" if auto-approve
+      },
+      include: {
+        pet: { select: { id: true, name: true } },
+        course: { select: { id: true, title: true } },
+      },
+    });
+
+    res.status(201).json(enrollment);
+  } catch (err) {
+    console.error("Enroll pet error:", err);
+    res.status(500).json({ error: "Failed to enroll pet" });
+  }
+});
+
 module.exports = router;

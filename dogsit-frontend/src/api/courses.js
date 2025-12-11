@@ -6,6 +6,7 @@ const coursesApi = {
     method: "POST",
     body: JSON.stringify(data),
   }),
+
   update: (id, data) =>
     fetchWithAuth(`/courses/${id}`, {
       method: "PATCH",
@@ -41,6 +42,22 @@ const coursesApi = {
 
   getMyIssuableCourses: () =>
     fetchWithAuth("/courses/my/issuable"),
+  
+  enrollPet: (courseId, petId) =>
+    fetchWithAuth(`/courses/${courseId}/enroll`, {
+      method: "POST",
+      body: JSON.stringify({ petId }),
+    }),
+
+  getPendingEnrollments: () => fetchWithAuth("/courses/requests"),
+
+  processEnrollment: (enrollmentId, action) =>
+    fetchWithAuth(`/courses/requests/${enrollmentId}/process`, {
+      method: "PATCH",
+      body: JSON.stringify({ action }),
+    }),
+
+  getMyEnrollments: () => fetchWithAuth("/courses/my/enrollments"),
 };
 
 export default coursesApi;

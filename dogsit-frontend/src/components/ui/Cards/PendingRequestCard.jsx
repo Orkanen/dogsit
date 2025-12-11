@@ -1,9 +1,8 @@
-import { Link } from "react-router-dom";
-import api from "@/api";
-
 export default function PendingRequestCard({ request, onRefresh }) {
   const isPetRequest = request.type === "PET_LINK";
   const isMembership = request.type === "MEMBERSHIP" || !request.type;
+
+  // Remove all isCourseEnrollment logic — it's handled separately now
 
   const requesterName = isPetRequest
     ? request.pet?.owner?.profile
@@ -54,7 +53,8 @@ export default function PendingRequestCard({ request, onRefresh }) {
       <div className="pending-request-card__info">
         <h4>
           <strong>{requesterName || "Someone"}</strong> wants to{" "}
-          {isPetRequest ? "verify pet with" : "join"} <strong>{targetName}</strong>
+          {isPetRequest ? "verify pet with" : "join"}{" "}
+          <strong>{targetName}</strong>
         </h4>
 
         {isPetRequest && request.pet && (

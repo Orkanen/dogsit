@@ -1,7 +1,13 @@
 import fetchWithAuth from "./fetchWithAuth";
 
 const competitionsApi = {
-  update: (id, data) =>
+create: (data) =>
+  fetchWithAuth("/competition", {
+    method: "POST",
+    body: JSON.stringify(data),
+  }),
+
+update: (id, data) =>
   fetchWithAuth(`/competition/${id}`, {
     method: "PATCH",
     body: JSON.stringify(data),
