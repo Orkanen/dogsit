@@ -385,13 +385,13 @@ router.get("/my/enrollments", authenticateToken, async (req, res) => {
     const enrollments = await prisma.courseEnrollment.findMany({
       where: { userId },
       include: {
-        pet: { 
-          include: { 
-            images: { take: 1 } 
-          } 
+        pet: {
+          include: {
+            images: { take: 1 },
+          },
         },
-        course: { 
-          include: { 
+        course: {
+          include: {
             club: { select: { id: true, name: true } },
             certifiers: {
               include: {
@@ -404,7 +404,7 @@ router.get("/my/enrollments", authenticateToken, async (req, res) => {
                 },
               },
             },
-          } 
+          },
         },
         processedByUser: {
           select: {
@@ -413,12 +413,20 @@ router.get("/my/enrollments", authenticateToken, async (req, res) => {
             profile: { select: { firstName: true, lastName: true } },
           },
         },
-        // CORRECT: inside include
+        // FULL CERTIFICATION WITH COURSE TITLE, CLUB & TRAINER
         certification: {
           include: {
-            issuingClub: { select: { id: true, name: true } },
+            course: {
+              select: {
+                id: true,
+                title: true,
+              },
+            },
+            issuingClub: {
+              select: { id: true, name: true } },
             verifiedByUser: {
               select: {
+                id: true,
                 profile: { select: { firstName: true, lastName: true } },
               },
             },
