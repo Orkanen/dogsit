@@ -11,26 +11,30 @@ router.get("/managed", authenticateToken, async (req, res) => {
   const userId = req.user.id;
 
   try {
-    // 1. Find all clubs where user is OWNER or EMPLOYEE
+    // 1. Get managed clubs with members
     const managedClubs = await prisma.club.findMany({
       where: {
         members: {
           some: {
             userId,
             role: { in: ["OWNER", "EMPLOYEE"] },
-            status: "ACCEPTED"
-          }
-        }
+            status: "ACCEPTED",
+          },
+        },
       },
       include: {
         members: {
           include: {
             user: {
-              select: { id: true, email: true, profile: { select: { firstName: true, lastName: true } } }
-            }
-          }
-        }
-      }
+              select: {
+                id: true,
+                email: true,
+                profile: { select: { firstName: true, lastName: true } },
+              },
+            },
+          },
+        },
+      },
     });
 
     const clubIds = managedClubs.map(c => c.id);
@@ -40,40 +44,87 @@ router.get("/managed", authenticateToken, async (req, res) => {
         clubs: [],
         courses: [],
         competitions: [],
-        requests: { membership: [], enrollments: [], entries: [] }
+        requests: { membership: [], enrollments: [], entries: [] },
       });
     }
 
-    // 2. Parallel fetch everything
-    const [courses, competitions, membershipRequests, enrollments, entries] = await Promise.all([
+    // 2. Parallel fetch — now with correct status values
+    const [
+      courses,
+      competitions,
+      membershipRequests,
+      courseEnrollments,
+      competitionEntries,
+    ] = await Promise.all([
+      // COURSES — with approved enrollments
       prisma.course.findMany({
         where: { clubId: { in: clubIds } },
         include: {
           club: { select: { id: true, name: true } },
-          certifiers: { include: { user: { select: { id: true, profile: true } } } }
+          certifiers: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  email: true,
+                  profile: { select: { firstName: true, lastName: true } },
+                },
+              },
+            },
+          },
+          enrollments: {
+            where: { status: "APPROVED" },
+          },
         },
-        orderBy: { createdAt: "desc" }
+        orderBy: { createdAt: "desc" },
       }),
+
+      // COMPETITIONS — with accepted entries
       prisma.competition.findMany({
         where: { clubId: { in: clubIds } },
         include: {
           club: { select: { id: true, name: true } },
-          entries: { include: { pet: true, user: { select: { profile: true } } } }
+          entries: {
+            where: { status: "ACCEPTED" },  // EntryStatus uses "ACCEPTED"
+            include: {
+              pet: { select: { id: true, name: true } },
+              user: { select: { profile: { select: { firstName: true, lastName: true } } } },
+            },
+          },
         },
-        orderBy: { startAt: "desc" }
+        orderBy: { startAt: "desc" },
       }),
+
+      // Pending membership requests
       prisma.clubMember.findMany({
         where: { clubId: { in: clubIds }, status: "PENDING" },
-        include: { user: { select: { id: true, profile: true } }, club: { select: { name: true } } }
+        include: {
+          user: { select: { id: true, profile: { select: { firstName: true, lastName: true } } } },
+          club: { select: { name: true } },
+        },
       }),
+
+      // Pending course enrollments
       prisma.courseEnrollment.findMany({
         where: { course: { clubId: { in: clubIds } }, status: "APPLIED" },
-        include: { course: { select: { title: true } }, pet: true, user: { select: { profile: true } } }
+        include: {
+          course: { select: { id: true, title: true } },
+          pet: { select: { id: true, name: true, breed: true, images: { take: 1 } } },
+          user: { select: { profile: { select: { firstName: true, lastName: true } } } },
+        },
+        orderBy: { appliedAt: "desc" },
       }),
+
+      // Pending competition entries
       prisma.competitionEntry.findMany({
         where: { competition: { clubId: { in: clubIds } }, status: "PENDING" },
-        include: { competition: { select: { title: true } }, pet: true, user: { select: { profile: true } } }
-      })
+        include: {
+          competition: { select: { id: true, title: true } },
+          pet: { select: { id: true, name: true, breed: true, images: { take: 1 } } },
+          user: { select: { profile: { select: { firstName: true, lastName: true } } } },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
     ]);
 
     res.json({
@@ -82,27 +133,14 @@ router.get("/managed", authenticateToken, async (req, res) => {
       competitions,
       requests: {
         membership: membershipRequests,
-        enrollments,
-        entries
-      }
+        enrollments: courseEnrollments,
+        entries: competitionEntries,
+      },
     });
-
   } catch (err) {
-    console.error("GET /me/managed failed", err);
+    console.error("GET /me/managed failed:", err);
     res.status(500).json({ error: "Failed to load managed data" });
   }
-});
-
-// Optional: lightweight versions
-router.get("/clubs", authenticateToken, async (req, res) => {
-  const userId = req.user.id;
-  const clubs = await prisma.club.findMany({
-    where: {
-      members: { some: { userId, role: { in: ["OWNER", "EMPLOYEE"] }, status: "ACCEPTED" } }
-    },
-    select: { id: true, name: true }
-  });
-  res.json(clubs);
 });
 
 module.exports = router;

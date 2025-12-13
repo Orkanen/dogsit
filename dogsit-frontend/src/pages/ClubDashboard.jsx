@@ -9,6 +9,7 @@ import CourseCard from "@/components/ui/cards/CourseCard";
 import CompetitionCard from "@/components/ui/cards/CompetitionCard";
 import ClubCard from "../components/ui/Cards/ClubCard";
 import CourseEnrollmentRequestCard from "../components/ui/Cards/CourseEnrollmentRequestCard";
+import CertificationRequestCard from "@/components/ui/Cards/CertificationRequestCard"; // ← NEW
 import "@/styles/pages/_clubDashboard.scss";
 
 export default function ClubDashboard() {
@@ -17,25 +18,32 @@ export default function ClubDashboard() {
   const [myClubs, setMyClubs] = useState([]);
   const [allCourses, setAllCourses] = useState([]);
   const [allCompetitions, setAllCompetitions] = useState([]);
-  const [requests, setRequests] = useState([]);
+  const [requests, setRequests] = useState({
+    membership: [],
+    enrollments: [],
+    entries: [],
+    certifications: [], // ← NEW
+  });
   const [loading, setLoading] = useState(true);
 
   const loadEverything = async () => {
     setLoading(true);
     try {
-      const [clubsData, enrollmentsData] = await Promise.all([
+      const [clubsData, enrollmentsData, certRequestsData] = await Promise.all([
         api.club.getManagedData(),
         api.courses.getPendingEnrollments(),
+        api.certifications.getPending(), // ← NEW: fetch pending certs
       ]);
-  
+
       setMyClubs(clubsData.clubs || []);
       setAllCourses(clubsData.courses || []);
       setAllCompetitions(clubsData.competitions || []);
-  
+
       setRequests({
         membership: clubsData.membershipRequests || [],
         enrollments: enrollmentsData || [],
         entries: clubsData.competitionEntries || [],
+        certifications: certRequestsData || [], // ← NEW
       });
     } catch (err) {
       console.error("Load failed", err);
@@ -49,8 +57,8 @@ export default function ClubDashboard() {
   }, []);
 
   const isOwnerOf = (item) => {
-    return myClubs.some(club => 
-      club.id === item.clubId && 
+    return myClubs.some(club =>
+      club.id === item.clubId &&
       club.members?.some(m => m.userId === user?.id && m.role === "OWNER")
     );
   };
@@ -76,7 +84,7 @@ export default function ClubDashboard() {
     <section className="club-dashboard">
       <header className="club-dashboard__header">
         <h1 className="club-dashboard__title">Club Control Center</h1>
-        <Link to="/" className="club-dashboard__home-link">← Back to Home</Link>
+        <Link to="/" className="club-dashboard__home-link">Back to Home</Link>
       </header>
 
       {/* MY CLUBS */}
@@ -89,7 +97,7 @@ export default function ClubDashboard() {
         </div>
       </section>
 
-      {/* PENDING REQUESTS — Only membership */}
+      {/* PENDING MEMBERSHIP REQUESTS */}
       {requests.membership.length > 0 && (
         <section className="club-dashboard__requests">
           <h2 className="club-dashboard__section-title">
@@ -97,17 +105,13 @@ export default function ClubDashboard() {
           </h2>
           <div className="club-dashboard__requests-list">
             {requests.membership.map(req => (
-              <PendingRequestCard
-                key={req.id}
-                request={req}
-                onRefresh={loadEverything}
-              />
+              <PendingRequestCard key={req.id} request={req} onRefresh={loadEverything} />
             ))}
           </div>
         </section>
       )}
 
-      {/* COURSE ENROLLMENT REQUESTS — Separate section */}
+      {/* COURSE ENROLLMENT REQUESTS */}
       {requests.enrollments.length > 0 && (
         <section className="club-dashboard__requests">
           <h2 className="club-dashboard__section-title">
@@ -118,6 +122,24 @@ export default function ClubDashboard() {
               <CourseEnrollmentRequestCard
                 key={enrollment.id}
                 enrollment={enrollment}
+                onRefresh={loadEverything}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* CERTIFICATE REQUESTS */}
+      {requests.certifications.length > 0 && (
+        <section className="club-dashboard__requests">
+          <h2 className="club-dashboard__section-title">
+            Certificate Requests ({requests.certifications.length})
+          </h2>
+          <div className="club-dashboard__requests-list">
+            {requests.certifications.map(cert => (
+              <CertificationRequestCard
+                key={cert.id}
+                cert={cert}
                 onRefresh={loadEverything}
               />
             ))}
@@ -153,15 +175,25 @@ export default function ClubDashboard() {
           </div>
         ) : (
           <div className="courses-list">
-            {allCourses.map(course => (
-              <CourseCard
-                key={course.id}
-                course={course}
-                isOwner={isOwnerOf(course)}
-                onSave={loadEverything}
-                onDelete={loadEverything}
-              />
-            ))}
+            {allCourses.map(course => {
+              // Find the club this course belongs to
+              const courseClub = myClubs.find(club => club.id === course.clubId);
+              // Get accepted OWNER/EMPLOYEE members for trainer selection
+              const courseClubMembers = courseClub?.members?.filter(
+                m => m.status === "ACCEPTED" && ["OWNER", "EMPLOYEE"].includes(m.role)
+              ) || [];
+
+              return (
+                <CourseCard
+                  key={course.id}
+                  course={course}
+                  isOwner={isOwnerOf(course)}
+                  clubMembers={courseClubMembers}
+                  onUpdate={loadEverything}
+                  onDelete={loadEverything}
+                />
+              );
+            })}
           </div>
         )}
       </section>

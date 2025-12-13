@@ -8,6 +8,7 @@ import messageApi from "./message";
 import petApi from "./pet";
 import profileApi from "./profile";
 import sitterApi from "./sitter";
+import certificationsApi from "./certifications";
 
 const api = {
   auth: authApi,
@@ -20,6 +21,7 @@ const api = {
   pet: petApi,
   profile: profileApi,
   sitter: sitterApi,
+  certifications: certificationsApi
 };
 
 export default api;

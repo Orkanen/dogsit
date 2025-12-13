@@ -229,4 +229,61 @@ router.post("/:petId/request-link", authenticateToken, async (req, res) => {
   }
 });
 
+/**
+ * GET /pets/:id/courses
+ * Get approved course enrollments for a specific pet (owner only)
+ * Used in MyPetProfile to display enrolled courses via PetEnrollmentCard
+ */
+router.get("/:id/courses", authenticateToken, canManagePet, async (req, res) => {
+  const petId = Number(req.params.id);
+
+  try {
+    const enrollments = await prisma.courseEnrollment.findMany({
+      where: {
+        petId,
+        status: "APPROVED",
+      },
+      include: {
+        course: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            isHidden: true,
+            isAvailable: true,
+            unavailableReason: true,
+            createdAt: true,
+          },
+          include: {
+            club: {
+              select: { id: true, name: true, location: true },
+            },
+            certifiers: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    email: true,
+                    profile: { select: { firstName: true, lastName: true } },
+                  },
+                },
+              },
+            },
+          },
+        },
+        pet: {
+          select: { id: true, name: true },
+        },
+        certification: true,  // If certification already issued
+      },
+      orderBy: { appliedAt: "desc" },
+    });
+
+    res.json(enrollments);
+  } catch (err) {
+    console.error("GET /pets/:id/courses error:", err);
+    res.status(500).json({ error: "Failed to fetch pet course enrollments" });
+  }
+});
+
 module.exports = router;

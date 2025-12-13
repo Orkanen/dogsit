@@ -4,11 +4,13 @@ import { useAuth } from "@/context/AuthContext";
 import api from "@/api";
 import ConfirmModal from "@/components/ui/RevokeConfirmModal";
 import PetEnrollmentCard from "../components/ui/Cards/PetEnrollmentCard";
+import CertificateCard from "../components/ui/Cards/CertificationCard";
 import "@/styles/pages/_myPetProfile.scss";
 
 export default function MyPetProfile() {
   const { id } = useParams();
   const { user } = useAuth();
+
   const [pet, setPet] = useState(null);
   const [enrollments, setEnrollments] = useState([]);
   const [kennel, setKennel] = useState(null);
@@ -31,10 +33,11 @@ export default function MyPetProfile() {
       try {
         setLoading(true);
 
+        // Only 3 requests now — no more /certifications?petId=
         const [petData, allKennels, enrollmentData] = await Promise.all([
           api.pet.getPetById(id),
           api.kennel.getKennels(),
-          api.courses.getMyEnrollments(), // Now includes petId filter
+          api.courses.getMyEnrollments(), // ← returns certification inside each enrollment
         ]);
 
         // Security check
@@ -46,7 +49,7 @@ export default function MyPetProfile() {
         setPet(petData);
         setKennels(allKennels);
 
-        // Filter enrollments for THIS pet only
+        // Filter enrollments for this pet
         const petEnrollments = enrollmentData.filter(
           (e) => e.petId === Number(id)
         );
@@ -60,7 +63,7 @@ export default function MyPetProfile() {
           age: petData.age || "",
         });
 
-        // Load verified kennel if exists
+        // Load verified kennel
         if (petData.kennelId) {
           try {
             const k = await api.kennel.getKennelById(petData.kennelId);
@@ -201,6 +204,29 @@ export default function MyPetProfile() {
           </>
         )}
 
+        {/* CERTIFICATES */}
+        <section className="my-pet-profile__certificates">
+          <h2 className="section-title">Certificates</h2>
+
+          {enrollments
+            .filter((enrollment) => enrollment.certification?.status === "APPROVED")
+            .map((enrollment) => enrollment.certification)
+            .length === 0 ? (
+            <p className="empty-state">No certificates earned certificates yet.</p>
+          ) : (
+            <div className="certificates-grid">
+              {enrollments
+                .filter((enrollment) => enrollment.certification?.status === "APPROVED")
+                .map((enrollment) => (
+                  <CertificateCard
+                    key={enrollment.certification.id}
+                    cert={enrollment.certification}
+                  />
+                ))}
+            </div>
+          )}
+        </section>
+
         {/* KENNEL VERIFICATION */}
         <div className="my-pet-profile__verification">
           <strong>Kennel Verification:</strong>
@@ -248,21 +274,26 @@ export default function MyPetProfile() {
         </div>
       </section>
 
-      {/* COURSE ENROLLMENTS */}
+      {/* ACTIVE COURSE ENROLLMENTS */}
       <section className="my-pet-profile__enrollments">
-        <h2 className="section-title">Course Enrollments</h2>
-        {enrollments.length === 0 ? (
+        <h2 className="section-title">Active Course Enrollments</h2>
+
+        {enrollments
+          .filter((enrollment) => !enrollment.certification)
+          .length === 0 ? (
           <p className="empty-state">
-            {pet.name} is not enrolled in any courses yet.
+            {pet.name} has no active course enrollments.
           </p>
         ) : (
           <div className="enrollments-grid">
-            {enrollments.map((enrollment) => (
-              <PetEnrollmentCard
-                key={enrollment.id}
-                enrollment={enrollment}
-              />
-            ))}
+            {enrollments
+              .filter((enrollment) => !enrollment.certification)
+              .map((enrollment) => (
+                <PetEnrollmentCard
+                  key={enrollment.id}
+                  enrollment={enrollment}
+                />
+              ))}
           </div>
         )}
       </section>

@@ -202,18 +202,30 @@ router.patch("/:id", authenticateToken, async (req, res) => {
     if (!course) return res.status(404).json({ error: "Course not found" });
 
     const member = await prisma.clubMember.findFirst({
-      where: { clubId: course.clubId, userId: actorId, role: { in: ["OWNER", "EMPLOYEE"] }, status: "ACCEPTED" },
+      where: {
+        clubId: course.clubId,
+        userId: actorId,
+        role: { in: ["OWNER", "EMPLOYEE"] },
+        status: "ACCEPTED"
+      },
     });
     if (!member) return res.status(403).json({ error: "Not authorized" });
 
     const updated = await prisma.course.update({
       where: { id },
       data: updates,
-      include: { certifiers: { include: { user: true } } },
+      include: {
+        certifiers: { include: { user: true } },
+        enrollments: {
+          where: { status: "APPROVED" },
+          // No need to include pet/user here unless you want more data
+        },
+      },
     });
 
     res.json(updated);
   } catch (err) {
+    console.error("Update failed:", err);
     res.status(500).json({ error: "Update failed" });
   }
 });
@@ -373,14 +385,52 @@ router.get("/my/enrollments", authenticateToken, async (req, res) => {
     const enrollments = await prisma.courseEnrollment.findMany({
       where: { userId },
       include: {
-        pet: { include: { images: { take: 1 } } },
-        course: { include: { club: { select: { id: true, name: true } } } },
+        pet: { 
+          include: { 
+            images: { take: 1 } 
+          } 
+        },
+        course: { 
+          include: { 
+            club: { select: { id: true, name: true } },
+            certifiers: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    email: true,
+                    profile: { select: { firstName: true, lastName: true } },
+                  },
+                },
+              },
+            },
+          } 
+        },
+        processedByUser: {
+          select: {
+            id: true,
+            email: true,
+            profile: { select: { firstName: true, lastName: true } },
+          },
+        },
+        // CORRECT: inside include
+        certification: {
+          include: {
+            issuingClub: { select: { id: true, name: true } },
+            verifiedByUser: {
+              select: {
+                profile: { select: { firstName: true, lastName: true } },
+              },
+            },
+          },
+        },
       },
       orderBy: { appliedAt: "desc" },
     });
 
     res.json(enrollments);
   } catch (err) {
+    console.error("GET /courses/my/enrollments error:", err);
     res.status(500).json({ error: "Failed to load enrollments" });
   }
 });

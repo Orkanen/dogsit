@@ -122,6 +122,7 @@ model User {
   competitionAllowedAwarderProcessed CompetitionAllowedAwarder[] @relation("CompetitionAllowedAwarderProcessedBy")
   userCertificateSubmissions      UserCertificateSubmission[]
   processedCertificateSubmissions UserCertificateSubmission[] @relation("UserCertificateSubmissionProcessedBy")
+  processedEnrollments CourseEnrollment[] @relation("EnrollmentProcessedBy")
   certifications                  Certification[]
   createdAt                       DateTime  @default(now())
   updatedAt                       DateTime  @updatedAt
@@ -341,6 +342,7 @@ model Club {
   membershipType           String
   verificationStatus       String          @default("PENDING")
   members                  ClubMember[]
+  location                 String?
   awardsIssued             Award[]
   competitions             Competition[]
   createdAt                DateTime        @default(now())
@@ -507,6 +509,9 @@ model CourseEnrollment {
   processedBy Int?
   notes       String?
   course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  processedByUser User?         @relation("EnrollmentProcessedBy", fields: [processedBy], references: [id])
+  certificationId Int?     @unique // optional, one enrollment -> one certificate
+  certification   Certification? @relation(fields: [certificationId], references: [id])
   user        User?     @relation(fields: [userId], references: [id])
   pet         Pet       @relation(fields: [petId], references: [id])
   @@unique([courseId, petId])
@@ -552,6 +557,7 @@ model Certification {
   verifiedByCertifier   ClubCertifier? @relation(fields: [verifiedByCertifierId], references: [id])
   verifiedByUserId      Int?
   verifiedByUser        User?     @relation("CertificationVerifiedByUser", fields: [verifiedByUserId], references: [id])
+  enrollment          CourseEnrollment? @relation
   course                Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
   user                  User?     @relation(fields: [userId], references: [id])
   pet                   Pet?      @relation(fields: [petId], references: [id])
